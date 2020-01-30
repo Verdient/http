@@ -1,0 +1,26 @@
+{
+    "name": "verdient/http",
+    "description": "php http client",
+    "type": "library",
+    "keywords": ["http", "request", "restful"],
+    "homepage": "https://github.com/Verdient/http",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Verdient.",
+            "email": "fagui.zhu@foxmail.com",
+            "homepage": "https://github.com/Verdient"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/Verdient/http/issues",
+        "source": "https://github.com/Verdient/http"
+    },
+    "require": {
+        "php": ">=7.0.0",
+        "verdient/chorus": ">=0.0.1"
+    },
+    "autoload": {
+        "psr-4": {"http\\": "src"}
+    }
+}
