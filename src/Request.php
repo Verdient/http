@@ -1,6 +1,7 @@
 <?php
 namespace http;
 
+use chorus\InvalidCallException;
 use chorus\InvalidConfigException;
 use chorus\InvalidParamException;
 use chorus\ObjectHelper;
@@ -49,6 +50,14 @@ class Request extends \chorus\BaseObject
 	 * @author Verdient。
 	 */
 	public $builders = [];
+
+	/**
+	 * @var Array $parsers
+	 * 解析器
+	 * -------------------
+	 * @author Verdient。
+	*/
+	public $parsers = [];
 
 	/**
 	 * @var String|Callable $bodySerializer
@@ -139,6 +148,14 @@ class Request extends \chorus\BaseObject
 	protected $_options = [];
 
 	/**
+	 * @var Boolean $_isSent
+	 * 是否已发送
+	 * ---------------------
+	 * @author Verdient。
+	 */
+	protected $_isSent = false;
+
+	/**
 	 * init()
 	 * 初始化
 	 * ------
@@ -195,69 +212,107 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * get()
-	 * get访问
-	 * ------
-	 * @return Response
+	 * get([Boolean $raw = false])
+	 * GET访问
+	 * ---------------------------
+	 * @param Boolean $raw 是否返回原文
+	 * ------------------------------
+	 * @return Response|String
 	 * @author Verdient。
 	 */
-	public function get(){
-		return $this->request('GET');
+	public function get($raw = false){
+		return $this->request('GET', $raw);
 	}
 
 	/**
-	 * head()
-	 * head访问
-	 * --------
-	 * @return Response
+	 * head([Boolean $raw = false])
+	 * HEAD访问
+	 * ----------------------------
+	 * @param Boolean $raw 是否返回原文
+	 * ------------------------------
+	 * @return Response|String
 	 * @author Verdient。
 	 */
-	public function head(){
-		return $this->request('HEAD');
+	public function head($raw = false){
+		return $this->request('HEAD', $raw);
 	}
 
 	/**
-	 * post()
-	 * post访问
-	 * -------
-	 * @return Response
+	 * post([Boolean $raw = false])
+	 * POST访问
+	 * ----------------------------
+	 * @param Boolean $raw 是否返回原文
+	 * ------------------------------
+	 * @return Response|String
 	 * @author Verdient。
 	 */
-	public function post(){
-		return $this->request('POST');
+	public function post($raw = false){
+		return $this->request('POST', $raw);
 	}
 
 	/**
-	 * put()
-	 * put访问
-	 * ------
-	 * @return Response
+	 * put([Boolean $raw = false])
+	 * PUT访问
+	 * ---------------------------
+	 * @param Boolean $raw 是否返回原文
+	 * ------------------------------
+	 * @return Response|String
 	 * @author Verdient。
 	 */
-	public function put(){
-		return $this->request('PUT');
+	public function put($raw = false){
+		return $this->request('PUT', $raw);
 	}
 
 	/**
-	 * patch()
-	 * patch访问
-	 * ---------
-	 * @return Response
+	 * patch([Boolean $raw = false])
+	 * PATCH访问
+	 * -----------------------------
+	 * @param Boolean $raw 是否返回原文
+	 * ------------------------------
+	 * @return Response|String
 	 * @author Verdient。
 	 */
-	public function patch(){
-		return $this->request('PATCH');
+	public function patch($raw = false){
+		return $this->request('PATCH', $raw);
 	}
 
 	/**
-	 * delete()
-	 * delete访问
-	 * ---------
-	 * @return Response
+	 * delete([Boolean $raw = false])
+	 * DELETE访问
+	 * ------------------------------
+	 * @param Boolean $raw 是否返回原文
+	 * ------------------------------
+	 * @return Response|String
 	 * @author Verdient。
 	 */
-	public function delete(){
-		return $this->request('DELETE');
+	public function delete($raw = false){
+		return $this->request('DELETE', $raw);
+	}
+
+	/**
+	 * options([Boolean $raw = false])
+	 * OPTIONS访问
+	 * -------------------------------
+	 * @param Boolean $raw 是否返回原文
+	 * ------------------------------
+	 * @return Response|String
+	 * @author Verdient。
+	 */
+	public function options($raw = false){
+		return $this->request('OPTIONS', $raw);
+	}
+
+	/**
+	 * trace([Boolean $raw = false])
+	 * TRACE访问
+	 * -----------------------------
+	 * @param Boolean $raw 是否返回原文
+	 * ------------------------------
+	 * @return Response|String
+	 * @author Verdient。
+	 */
+	public function trace($raw = false){
+		return $this->request('TRACE', $raw);
 	}
 
 	/**
@@ -468,10 +523,10 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setContent(Mixed $data, String|Callable $serializer = null)
+	 * setContent(String|Array|Builder $data, String|Callable $serializer = null)
 	 * 设置消息体
-	 * -----------------------------------------------------------
-	 * @param Mixed $data 发送的数据
+	 * --------------------------------------------------------------------------
+	 * @param String|Array|Builder $data 发送的数据
 	 * @param String|Callable $serializer 序列化器
 	 * ------------------------------------------
 	 * @return Request
@@ -483,10 +538,10 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * normalizeContent(Mixed $data, String|Callable $serializer = null)
+	 * normalizeContent(String|Array|Builde $data, String|Callable $serializer = null)
 	 * 格式化消息体
-	 * -----------------------------------------------------------------
-	 * @param Mixed $data 发送的数据
+	 * -------------------------------------------------------------------------------
+	 * @param String|Array|Builde $data 发送的数据
 	 * @param String|Callable $serializer 序列化器
 	 * ------------------------------------------
 	 * @throws Exception
@@ -633,10 +688,7 @@ class Request extends \chorus\BaseObject
 	 * @author Verdient。
 	 */
 	public function reset(){
-		if($this->_curl !== null){
-			@curl_close($this->_curl);
-		}
-		$this->_curl = null;
+		$this->releaseResource();
 		$this->_url = null;
 		$this->_header = [];
 		$this->_query = [];
@@ -644,7 +696,22 @@ class Request extends \chorus\BaseObject
 		$this->_content = null;
 		$this->_options = [];
 		$this->_response = null;
+		$this->_isSent = false;
 		return $this;
+	}
+
+	/**
+	 * releaseResource()
+	 * 释放资源
+	 * -----------------
+	 * @return Request
+	 * @author Verdient。
+	*/
+	public function releaseResource(){
+		if($this->_curl !== null){
+			@curl_close($this->_curl);
+			$this->_curl = null;
+		}
 	}
 
 	/**
@@ -673,10 +740,10 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getInfo(String $opt)
+	 * getInfo([Integer $opt = null])
 	 * 获取连接资源句柄的信息
-	 * ----------------------
-	 * @param String $opt 选项名称
+	 * ------------------------------
+	 * @param Integer $opt 选项名称
 	 * --------------------------
 	 * @return Array|String
 	 * @author Verdient。
@@ -770,15 +837,22 @@ class Request extends \chorus\BaseObject
 	 * @author Verdient。
 	 */
 	public function send($raw = false){
-		$this->prepare();
-		$this->_response = curl_exec($this->_curl);
-		if($raw === true){
-			return $this->_response;
+		if($this->_isSent === false){
+			$this->_isSent = true;
+			$this->prepare();
+			$this->_response = curl_exec($this->_curl);
+			if($raw === true){
+				return $this->_response;
+			}
+			return ObjectHelper::create([
+				'class' => static::responseClass(),
+				'request' => $this,
+				'tryParse' => $this->tryParse,
+				'parsers' => $this->parsers
+			]);
+		}else{
+			throw new InvalidCallException('The request has been sent. Call reset() or create a new instance');
 		}
-		$class = static::responseClass();
-		$response = new $class($this);
-		$response->tryParse = $this->tryParse;
-		return $response;
 	}
 
 	/**
@@ -902,5 +976,15 @@ class Request extends \chorus\BaseObject
 			->prepareContent()
 			->prepareHeader()
 			->prepareCUrl();
+	}
+
+	/**
+	 * __destruct()
+	 * 析构函数
+	 * ------------
+	 * @author Verdient。
+	 */
+	public function __destruct(){
+		$this->releaseResource();
 	}
 }

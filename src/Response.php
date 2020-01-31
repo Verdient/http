@@ -57,14 +57,6 @@ class Response extends \chorus\BaseObject
 	public $_statusCode = null;
 
 	/**
-	 * @var $_rawResponse
-	 * 原始响应
-	 * ------------------
-	 * @author Verdient。
-	 */
-	protected $_rawResponse;
-
-	/**
 	 * @var $_rawHeader
 	 * 原始头部
 	 * ----------------
@@ -113,26 +105,25 @@ class Response extends \chorus\BaseObject
 	protected $_charset = false;
 
 	/**
-	 * __construct(Request $request)
-	 * 构造函数
-	 * -----------------------------
-	 * @param Request $request 请求对象
-	 * -------------------------------
+	 * init()
+	 * 初始化
+	 * ------
+	 * @inheritdoc
+	 * -----------
 	 * @author Verdient。
 	 */
-	public function __construct(Request $request){
-		$this->_rawResponse = $request->getResponse();
-		$this->_statusCode = $request->getStatusCode();
-		if($request->getOption(CURLOPT_HEADER)){
-			$headerSize = $request->getInfo(CURLINFO_HEADER_SIZE);
-			$this->_rawHeader = mb_substr($this->_rawResponse, 0, $headerSize - 4);
-			$this->_rawContent = mb_substr($this->_rawResponse, $headerSize);
+	public function init(){
+		parent::init();
+		$response = $this->request->getResponse();
+		$this->_statusCode = $this->request->getStatusCode();
+		if($this->request->getOption(CURLOPT_HEADER)){
+			$headerSize = $this->request->getInfo(CURLINFO_HEADER_SIZE);
+			$this->_rawHeader = mb_substr($response, 0, $headerSize - 4);
+			$this->_rawContent = mb_substr($response, $headerSize);
 		}else{
-			$this->_rawContent = $this->_rawResponse;
+			$this->_rawContent = $response;
 		}
-		$this->request = $request;
 		$this->parsers = array_merge(static::BUILT_IN_PARSERS, $this->parsers);
-		parent::__construct();
 	}
 
 	/**
@@ -169,7 +160,7 @@ class Response extends \chorus\BaseObject
 	 * @author Verdient。
 	 */
 	public function getRawResponse(){
-		return $this->_rawResponse;
+		return $this->request->getResponse();
 	}
 
 	/**
