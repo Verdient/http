@@ -129,3 +129,15 @@ $response->getErrorCode(); //获取错误码
 $response->hasError(); //是否有错误
 ```
 `Response`中`request`指向原来的请求对象，若需要使用`Request`中的内容，请使用`$response->request`
+## 事件
+Request 内置请求前事件（Request::EVENT_BEFORE_REQUEST）和请求后（Request::EVENT_AFTER_REQUEST）事件，可使用on函数挂载事件
+
+事件触发时会将当前Request对象以参数的形式传递给相应处理函数
+```php
+$request->on(Request::EVENT_BEFORE_REQUEST, function($request){
+
+});
+$request->on(Request::EVENT_AFTER_REQUEST, function($request){
+
+});
+```

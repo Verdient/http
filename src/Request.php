@@ -16,6 +16,22 @@ use http\builder\Builder;
 class Request extends \chorus\BaseObject
 {
 	/**
+	 * @var const EVENT_BEFORE_REQUEST
+	 * 请求前
+	 * -------------------------------
+	 * @author Verdient。
+	 */
+	const EVENT_BEFORE_REQUEST = 'beforeRequest';
+
+	/**
+	 * @var const EVENT_AFTER_REQUEST
+	 * 请求后
+	 * ------------------------------
+	 * @author Verdient。
+	 */
+	const EVENT_AFTER_REQUEST = 'afterRequest';
+
+	/**
 	 * @var const BUILT_IN_BUILDERS
 	 * 内建构造器
 	 * ----------------------------
@@ -838,9 +854,11 @@ class Request extends \chorus\BaseObject
 	 */
 	public function send($raw = false){
 		if($this->_isSent === false){
-			$this->_isSent = true;
+			$this->trigger(static::EVENT_BEFORE_REQUEST, $this);
 			$this->prepare();
 			$this->_response = curl_exec($this->_curl);
+			$this->_isSent = true;
+			$this->trigger(static::EVENT_AFTER_REQUEST, $this);
 			if($raw === true){
 				return $this->_response;
 			}
