@@ -8,13 +8,13 @@ use http\Request;
 /**
  * 构建器配置 (可选)
  * 与$bodySerializer协同使用
- * 内置了三种序列化器，分别是：json，urlencoded，urlencoded
+ * 内置了三种序列化器，分别是：json，urlencoded，xml
  * 可自行新增或覆盖相应的构建器
  */
 $builders = [
 	'json' => 'http\builder\JsonBuilder',
 	'urlencoded' => 'http\builder\UrlencodedBuilder',
-	'urlencoded' => 'http\builder\XmlBuilder'
+	'xml' => 'http\builder\XmlBuilder'
 ];
 
 /**
