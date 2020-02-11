@@ -26,7 +26,7 @@ $builders = [
  * 可自行新增或覆盖相应的解析器
  */
 $parsers = [
-	'application/json' => 'Verdient\parser\JsonParser',
+	'application/json' => 'Verdient\http\parser\JsonParser',
 	'application/x-www-form-urlencoded' => 'Verdient\http\parser\UrlencodedParser',
 	'application/xml' => 'Verdient\http\parser\XmlParser',
 ];
