@@ -1,5 +1,5 @@
 <?php
-namespace http\parser;
+namespace Verdient\http\parser;
 
 /**
  * XmlParser

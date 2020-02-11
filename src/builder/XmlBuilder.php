@@ -1,5 +1,5 @@
 <?php
-namespace http\builder;
+namespace Verdient\http\builder;
 
 use DOMDocument;
 use DOMElement;

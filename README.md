@@ -3,7 +3,7 @@ HTTP 客户端
 
 ## 创建新的请求实例
 ```php
-use http\Request;
+use Verdient\http\Request;
 
 /**
  * 构建器配置 (可选)
@@ -12,9 +12,9 @@ use http\Request;
  * 可自行新增或覆盖相应的构建器
  */
 $builders = [
-	'json' => 'http\builder\JsonBuilder',
-	'urlencoded' => 'http\builder\UrlencodedBuilder',
-	'xml' => 'http\builder\XmlBuilder'
+	'json' => 'Verdient\http\builder\JsonBuilder',
+	'urlencoded' => 'Verdient\http\builder\UrlencodedBuilder',
+	'xml' => 'Verdient\http\builder\XmlBuilder'
 ];
 
 /**
@@ -26,9 +26,9 @@ $builders = [
  * 可自行新增或覆盖相应的解析器
  */
 $parsers = [
-	'application/json' => 'http\parser\JsonParser',
-	'application/x-www-form-urlencoded' => 'http\parser\UrlencodedParser',
-	'application/xml' => 'http\parser\XmlParser',
+	'application/json' => 'Verdient\parser\JsonParser',
+	'application/x-www-form-urlencoded' => 'Verdient\http\parser\UrlencodedParser',
+	'application/xml' => 'Verdient\http\parser\XmlParser',
 ];
 
 /**

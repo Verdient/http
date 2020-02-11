@@ -1,8 +1,8 @@
 <?php
-namespace http;
+namespace Verdient\http;
 
 use chorus\ObjectHelper;
-use http\parser\ResponseParserInterface;
+use Verdient\http\parser\ResponseParserInterface;
 
 /**
  * Response
@@ -27,9 +27,9 @@ class Response extends \chorus\BaseObject
 	 * @author Verdient。
 	 */
 	const BUILT_IN_PARSERS = [
-		'application/json' => 'http\parser\JsonParser',
-		'application/x-www-form-urlencoded' => 'http\parser\UrlencodedParser',
-		'application/xml' => 'http\parser\XmlParser',
+		'application/json' => 'Verdient\http\parser\JsonParser',
+		'application/x-www-form-urlencoded' => 'Verdient\http\parser\UrlencodedParser',
+		'application/xml' => 'Verdient\http\parser\XmlParser',
 	];
 
 	/**

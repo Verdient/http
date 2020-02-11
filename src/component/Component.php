@@ -1,5 +1,5 @@
 <?php
-namespace http\component;
+namespace Verdient\http\component;
 
 use chorus\ObjectHelper;
 use chorus\StringHelper;

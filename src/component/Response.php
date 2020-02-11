@@ -1,5 +1,5 @@
 <?php
-namespace http\component;
+namespace Verdient\http\component;
 
 use chorus\ArrayHelper;
 
@@ -9,7 +9,7 @@ use chorus\ArrayHelper;
  * --------
  * @author Verdient。
  */
-class Response extends \http\Response
+class Response extends \Verdient\http\Response
 {
 	/**
 	 * getIsSuccess()

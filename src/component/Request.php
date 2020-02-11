@@ -1,5 +1,5 @@
 <?php
-namespace http\component;
+namespace Verdient\http\component;
 
 use chorus\StringHelper;
 
@@ -9,7 +9,7 @@ use chorus\StringHelper;
  * -------
  * @author Verdient。
  */
-class Request extends \http\Request
+class Request extends \Verdient\http\Request
 {
 	/**
 	 * beforeSend()

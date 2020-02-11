@@ -1,11 +1,11 @@
 <?php
-namespace http;
+namespace Verdient\http;
 
 use chorus\InvalidCallException;
 use chorus\InvalidConfigException;
 use chorus\InvalidParamException;
 use chorus\ObjectHelper;
-use http\builder\Builder;
+use Verdient\http\builder\Builder;
 
 /**
  * Request
@@ -38,9 +38,9 @@ class Request extends \chorus\BaseObject
 	 * @author Verdient。
 	 */
 	const BUILT_IN_BUILDERS = [
-		'json' => 'http\builder\JsonBuilder',
-		'urlencoded' => 'http\builder\UrlencodedBuilder',
-		'xml' => 'http\builder\XmlBuilder'
+		'json' => 'Verdient\http\builder\JsonBuilder',
+		'urlencoded' => 'Verdient\http\builder\UrlencodedBuilder',
+		'xml' => 'Verdient\http\builder\XmlBuilder'
 	];
 
 	/**
