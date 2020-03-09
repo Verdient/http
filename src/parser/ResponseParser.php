@@ -15,5 +15,5 @@ abstract class ResponseParser extends \chorus\BaseObject implements ResponsePars
 	 * --------------------
 	 * @author Verdient。
 	 */
-	public $chatset = null;
+	public $charset = null;
 }

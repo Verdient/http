@@ -849,7 +849,7 @@ class Request extends \chorus\BaseObject
 	 * ----------------------------
 	 * @param Boolean $raw 是否返回原文
 	 * ------------------------------
-	 * @return String
+	 * @return Response|String
 	 * @author Verdient。
 	 */
 	public function send($raw = false){

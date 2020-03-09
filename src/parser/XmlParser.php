@@ -10,16 +10,6 @@ namespace Verdient\http\parser;
 class XmlParser extends ResponseParser
 {
 	/**
-	 * @var String $charset
-	 * 字符集
-	 * --------------------
-	 * @inheritdoc
-	 * -----------
-	 * @author Verdient。
-	 */
-	public $charset = '';
-
-	/**
 	 * @var Integer $options
 	 * 参数
 	 * ---------------------

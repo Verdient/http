@@ -7,7 +7,7 @@ namespace Verdient\http\parser;
  * ----------
  * @author Verdient。
  */
-class JsonParser extends \chorus\BaseObject implements ResponseParserInterface
+class JsonParser extends ResponseParser
 {
 	/**
 	 * @var Integer $depth
