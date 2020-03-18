@@ -101,7 +101,7 @@ class FormDataBuilder extends Builder
 	 * @author Verdient。
 	 */
 	public function addText($name, $value){
-		return $this->addElement($name, $value, static::TEXT);
+		return $this->addElement($name, [static::TEXT, $value]);
 	}
 
 	/**
@@ -115,23 +115,36 @@ class FormDataBuilder extends Builder
 	 * @author Verdient。
 	 */
 	public function addFile($name, $path){
-		return $this->addElement($name, $path, static::FILE);
+		return $this->addElement($name, [static::FILE, $path]);
 	}
 
 	/**
-	 * addElement(String $name, String $value, Integer $type)
+	 * addElement(String $name, Mixed $value)
 	 * 添加元素
-	 * ------------------------------------------------------
+	 * --------------------------------------
 	 * @param String $name 名称
-	 * @param String $value 内容
-	 * @param Integer $type 类型
-	 * ------------------------
+	 * @param Mixed $value 内容
+	 * -----------------------
 	 * @return FormData
 	 * @author Verdient。
 	 */
-	public function addElement($name, $value, $type){
-		$this->_elements[$name] = [$type, $value];
+	public function addElement($name, $value){
+		$this->_elements[$name] = $value;
 		return $this;
+	}
+
+	/**
+	 * 转换数组键值
+	 * @author Verdient。
+	 */
+	protected function convertArrayKey(&$node, $prefix, &$result) {
+		if(!is_array($node)){
+			$result[$prefix] = $node;
+		}else{
+			foreach($node as $key => $value){
+				$this->convertArrayKey($value, "{$prefix}[{$key}]", $result);
+			}
+		}
 	}
 
 	/**
@@ -152,27 +165,7 @@ class FormDataBuilder extends Builder
 				$files[$name] = $value[1];
 			}
 		}
-		function convert_array_key(&$node, $prefix, &$result) {
-			if(!is_array($node)){
-				$result[$prefix] = $node;
-			}else{
-				foreach($node as $key => $value){
-					convert_array_key($value, "{$prefix}[{$key}]", $result);
-				}
-			}
-		}
-
-		function query_multidimensional_array(&$array, $query) {
-			$query = explode('][', substr($query, 1, -1));
-			$temp = $array;
-			foreach ($query as $key) {
-				$temp = $temp[$key];
-			}
-			return $temp;
-		}
-
 		$body = [];
-
 		foreach($texts as $key => $value){
 			if(!is_array($value)){
 				$body_part = "Content-Disposition: form-data; name=\"$key\"\r\n";
@@ -180,7 +173,7 @@ class FormDataBuilder extends Builder
 				$body[] = $body_part;
 			}else{
 				$result = [];
-				convert_array_key($value, $key, $result);
+				$this->convertArrayKey($value, $key, $result);
 				foreach($result as $k => $v){
 					$body_part = "Content-Disposition: form-data; name=\"$k\"\r\n";
 					$body_part .= "\r\n$v";
@@ -188,14 +181,13 @@ class FormDataBuilder extends Builder
 				}
 			}
 		}
-
 		foreach($files as $key => $value){
 			if(!file_exists($value)){
 				throw new \Exception('file ' . $value . ' does not exist');
 			}
-			// $type = FileHelper::getMimeType($value);//todo
+			$type = mime_content_type($value);
 			$body_part = "Content-Disposition: form-data; name=\"$key\"; filename=\"{$value}\"\r\n";
-			// $body_part .= "Content-type: {$type}\r\n";//todo
+			$body_part .= "Content-type: {$type}\r\n";
 			$body_part .= "\r\n" . file_get_contents($value);
 			$body[] = $body_part;
 		}

@@ -59,11 +59,11 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
 	}
 
 	/**
-	 * addElement(String $name, String $value)
+	 * addElement(String $name, Mixed $value)
 	 * 添加元素
-	 * ---------------------------------------
+	 * --------------------------------------
 	 * @param String $name 名称
-	 * @param String $value 内容
+	 * @param Mixed $value 内容
 	 * ------------------------
 	 * @return FormData
 	 * @author Verdient。

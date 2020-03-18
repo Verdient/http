@@ -8,33 +8,25 @@ use chorus\ObjectHelper;
 use Verdient\http\builder\Builder;
 
 /**
- * Request
  * 请求
- * -------
  * @author Verdient。
  */
 class Request extends \chorus\BaseObject
 {
 	/**
-	 * @var const EVENT_BEFORE_REQUEST
-	 * 请求前
-	 * -------------------------------
+	 * @var string 请求前事件
 	 * @author Verdient。
 	 */
 	const EVENT_BEFORE_REQUEST = 'beforeRequest';
 
 	/**
-	 * @var const EVENT_AFTER_REQUEST
-	 * 请求后
-	 * ------------------------------
+	 * @var string 请求后事件
 	 * @author Verdient。
 	 */
 	const EVENT_AFTER_REQUEST = 'afterRequest';
 
 	/**
-	 * @var const BUILT_IN_BUILDERS
-	 * 内建构造器
-	 * ----------------------------
+	 * @var array 内建构造器
 	 * @author Verdient。
 	 */
 	const BUILT_IN_BUILDERS = [
@@ -44,9 +36,7 @@ class Request extends \chorus\BaseObject
 	];
 
 	/**
-	 * @var const DEFAULT_OPTIONS
-	 * 模式属性
-	 * --------------------------
+	 * @var array 默认参数
 	 * @author Verdient。
 	 */
 	const DEFAULT_OPTIONS = [
@@ -60,123 +50,91 @@ class Request extends \chorus\BaseObject
 	];
 
 	/**
-	 * @var Array $builders
-	 * 构建器
-	 * --------------------
+	 * @var array 构建器
 	 * @author Verdient。
 	 */
 	public $builders = [];
 
 	/**
-	 * @var Array $parsers
-	 * 解析器
-	 * -------------------
+	 * @var array 解析器
 	 * @author Verdient。
 	*/
 	public $parsers = [];
 
 	/**
-	 * @var String|Callable $bodySerializer
-	 * 消息体序列化器
-	 * ------------------------------------
+	 * @var string|callback 消息体序列化器
 	 * @author Verdient。
 	 */
 	public $bodySerializer = 'json';
 
 	/**
-	 * @var Boolean $tryParse
-	 * 是否尝试解析
-	 * ----------------------
+	 * @var bool 是否尝试解析
 	 * @author Verdient。
 	 */
 	public $tryParse = true;
 
 	/**
-	 * @var $_curl
-	 * cUrl实例
-	 * -----------
+	 * @var resource cUrl句柄
 	 * @author Verdient。
 	 */
 	protected $_curl = null;
 
 	/**
-	 * @var String $_url
-	 * 请求地址
-	 * -----------------
+	 * @var string 请求地址
 	 * @author Verdient。
 	 */
 	protected $_url = null;
 
 	/**
-	 * @var String $_method
-	 * 请求方法
-	 * --------------------
+	 * @var string 请求方法
 	 * @author Verdient。
 	 */
 	protected $_method = 'GET';
 
 	/**
-	 * @var Array $_header
-	 * 头部参数
-	 * -------------------
+	 * @var array 头部参数
 	 * @author Verdient。
 	 */
 	protected $_header = [];
 
 	/**
-	 * @var Array $_query
-	 * 查询参数
-	 * ------------------
+	 * @var array 查询参数
 	 * @author Verdient。
 	 */
 	protected $_query = [];
 
 	/**
-	 * @var Array $_body
-	 * 消息体参数
-	 * -----------------
+	 * @var array 消息体参数
 	 * @author Verdient。
 	 */
 	protected $_body = [];
 
 	/**
-	 * @var String $_content
-	 * 消息体
-	 * ---------------------
+	 * @var string 消息体
 	 * @author Verdient。
 	 */
 	protected $_content = null;
 
 	/**
-	 * @var String $_response
-	 * 响应原文
-	 * ----------------------
+	 * @var string 响应原文
 	 * @author Verdient。
 	 */
 	protected $_response = null;
 
 	/**
-	 * @var Array $_options
-	 * 参数
-	 * --------------------
+	 * @var array 参数
 	 * @author Verdient。
 	 */
 	protected $_options = [];
 
 	/**
-	 * @var Boolean $_isSent
-	 * 是否已发送
-	 * ---------------------
+	 * @var bool 是否已发送
 	 * @author Verdient。
 	 */
 	protected $_isSent = false;
 
 	/**
-	 * init()
-	 * 初始化
-	 * ------
 	 * @inheritdoc
-	 * -----------
 	 * @author Verdient。
 	 */
 	public function init(){
@@ -185,9 +143,7 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * responseClass()
 	 * 响应类
-	 * ---------------
 	 * @author Verdient。
 	 */
 	public static function responseClass(){
@@ -195,9 +151,7 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * new()
 	 * 新请求实例
-	 * --------
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -206,11 +160,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getBuilder(String $builder)
 	 * 获取构建器
-	 * ---------------------------
 	 * @param String $builder 构建器
-	 * ----------------------------
 	 * @return Builder
 	 * @author Verdient。
 	 */
@@ -228,12 +179,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * get([Boolean $raw = false])
 	 * GET访问
-	 * ---------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function get($raw = false){
@@ -241,12 +189,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * head([Boolean $raw = false])
 	 * HEAD访问
-	 * ----------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function head($raw = false){
@@ -254,12 +199,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * post([Boolean $raw = false])
 	 * POST访问
-	 * ----------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function post($raw = false){
@@ -267,12 +209,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * put([Boolean $raw = false])
 	 * PUT访问
-	 * ---------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function put($raw = false){
@@ -280,12 +219,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * patch([Boolean $raw = false])
 	 * PATCH访问
-	 * -----------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function patch($raw = false){
@@ -293,12 +229,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * delete([Boolean $raw = false])
 	 * DELETE访问
-	 * ------------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function delete($raw = false){
@@ -306,12 +239,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * options([Boolean $raw = false])
 	 * OPTIONS访问
-	 * -------------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function options($raw = false){
@@ -319,12 +249,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * trace([Boolean $raw = false])
 	 * TRACE访问
-	 * -----------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function trace($raw = false){
@@ -332,10 +259,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getUrl()
 	 * 获取URL地址
-	 * ----------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getUrl(){
@@ -343,11 +268,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setUrl(String $url)
 	 * 设置访问地址
-	 * -------------------
-	 * @param String $url URL
-	 * ----------------------
+	 * @param String $url URL地址
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -357,10 +279,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getHeader()
 	 * 获取头部参数
-	 * -----------
-	 * @return Array
+	 * @return array
 	 * @author Verdient。
 	 */
 	public function getHeader(){
@@ -368,26 +288,20 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setHeader(Array $header)
-	 * 设置发送的头部信息
-	 * ------------------------
-	 * @param Array $header 头部信息
-	 * ----------------------------
+	 * 设置发送的头部参数
+	 * @param array $header 头部参数
 	 * @return Request
 	 * @author Verdient。
 	 */
-	public function setHeader(Array $header){
+	public function setHeader(array $header){
 		$this->_header = $header;
 		return $this;
 	}
 
 	/**
-	 * addHeader(String $name, Mixed $value)
 	 * 添加头部
-	 * -------------------------------------
 	 * @param String $name 名称
 	 * @param Mixed $value 值
-	 * ------------------------
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -397,12 +311,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * addFilterHeader(String $key, String $value)
 	 * 过滤后将内容添加到头部信息中
-	 * -------------------------------------------
-	 * @param String $key 名称
-	 * @param String $value 内容
-	 * -------------------------
+	 * @param string $key 名称
+	 * @param string $value 内容
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -414,10 +325,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getQuery()
 	 * 获取查询参数
-	 * ----------
-	 * @return Array
+	 * @return array
 	 * @author Verdient。
 	 */
 	public function getQuery(){
@@ -425,26 +334,20 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setQuery(Array $query)
 	 * 设置查询信息
-	 * ----------------------
-	 * @param Array $query 查询信息
-	 * ---------------------------
+	 * @param array $query 查询信息
 	 * @return Request
 	 * @author Verdient。
 	 */
-	public function setQuery(Array $query){
+	public function setQuery(array $query){
 		$this->_query = $query;
 		return $this;
 	}
 
 	/**
-	 * addQuery(String $name, Mixed $value)
 	 * 添加查询信息
-	 * ------------------------------------
 	 * @param String $name 名称
 	 * @param Mixed $value 内容
-	 * ------------------------
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -454,12 +357,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * addFilterQuery(String $key, String $value)
 	 * 过滤后将内容添加到查询参数中
-	 * ------------------------------------------
-	 * @param String $key 名称
-	 * @param String $value 内容
-	 * -------------------------
+	 * @param string $key 名称
+	 * @param string $value 内容
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -471,10 +371,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getBody()
 	 * 获取消息体参数
-	 * ------------
-	 * @return Array
+	 * @return array
 	 * @author Verdient。
 	 */
 	public function getBody(){
@@ -482,11 +380,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setBody(Array $body)
 	 * 设置消息体参数
-	 * -----------------------
-	 * @param Array $body 消息体
-	 * ------------------------
+	 * @param array $body 消息体
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -496,12 +391,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * addBody(String $name, Mixed $value)
-	 * 设置消息体参数
-	 * -----------------------------------
-	 * @param String $name 名称
-	 * @param Mixed $value 内容
-	 * ------------------------
+	 * 添加消息体参数
+	 * @param string $name 名称
+	 * @param mixed $value 内容
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -511,12 +403,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * addFilterBody(String $key, String $value)
 	 * 过滤后将内容添加到消息体中
-	 * -----------------------------------------
-	 * @param String $key 名称
-	 * @param String $value 内容
-	 * ------------------------
+	 * @param string $key 名称
+	 * @param mixed $value 内容
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -528,10 +417,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getContent()
 	 * 获取消息体
 	 * ------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getContent(){
@@ -539,12 +427,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setContent(String|Array|Builder $data, String|Callable $serializer = null)
 	 * 设置消息体
-	 * --------------------------------------------------------------------------
-	 * @param String|Array|Builder $data 发送的数据
-	 * @param String|Callable $serializer 序列化器
-	 * ------------------------------------------
+	 * @param string|array|Builder $data 发送的数据
+	 * @param string|callback $serializer 序列化器
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -554,14 +439,11 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * normalizeContent(String|Array|Builde $data, String|Callable $serializer = null)
 	 * 格式化消息体
-	 * -------------------------------------------------------------------------------
-	 * @param String|Array|Builde $data 发送的数据
-	 * @param String|Callable $serializer 序列化器
-	 * ------------------------------------------
+	 * @param string|array|Builder $data 发送的数据
+	 * @param string|callback $serializer 序列化器
 	 * @throws Exception
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function normalizeContent($data, $serializer = null){
@@ -585,12 +467,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setProxy(String $address, Integer $port)
 	 * 设置代理
-	 * ----------------------------------------
-	 * @param String $address 地址
-	 * @param Integer $port 端口
-	 * ---------------------------
+	 * @param string $address 地址
+	 * @param int $port 端口
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -603,10 +482,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getMethod()
 	 * 获取请求方法
-	 * -----------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getMethod(){
@@ -614,11 +491,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setMethod(String $method)
 	 * 设置请求方法
-	 * -------------------------
-	 * @param String $method 请求方法
-	 * -----------------------------
+	 * @param string $method 请求方法
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -628,9 +502,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getResponse()
 	 * 获取响应内容
-	 * -------------
+	 * @return string|false
 	 * @author Verdient。
 	 */
 	public function getResponse(){
@@ -638,12 +511,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setOption(String $name, Mixed $value)
-	 * 设置选项
-	 * -------------------------------------
-	 * @param String $name 名称
-	 * @param Mixed $value 内容
-	 * ------------------------
+	 * 设置参数
+	 * @param string $name 名称
+	 * @param mixed $value 内容
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -653,11 +523,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * setOptions(Array $options)
-	 * 批量设置选项
-	 * --------------------------
-	 * @param Array $options 选项集合
-	 * -------------------------------
+	 * 批量设置参数
+	 * @param array $options 参数集合
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -669,11 +536,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * unsetOption(String $name)
-	 * 删除选项
-	 * -------------------------
-	 * @param String $name 名称
-	 * ------------------------
+	 * 删除参数
+	 * @param string $name 名称
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -685,9 +549,7 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * resetOptions()
 	 * 重置选项
-	 * --------------
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -697,9 +559,7 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * reset()
 	 * 重置
-	 * -------
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -717,9 +577,7 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * releaseResource()
 	 * 释放资源
-	 * -----------------
 	 * @return Request
 	 * @author Verdient。
 	*/
@@ -731,12 +589,9 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getOption(String $name)
 	 * 获取选项内容
-	 * -----------------------
-	 * @param String $name 名称
-	 * -----------------------
-	 * @return Mixed
+	 * @param string $name 名称
+	 * @return mixed
 	 * @author Verdient。
 	 */
 	public function getOption($name){
@@ -745,10 +600,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getOptions()
 	 * 获取所有的选项
-	 * ------------
-	 * @return Array
+	 * @return array
 	 * @author Verdient。
 	 */
 	public function getOptions(){
@@ -756,12 +609,17 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getInfo([Integer $opt = null])
+	 * 获取CURL句柄
+	 * @author Verdient。
+	 */
+	public function getCurl(){
+		return $this->_curl;
+	}
+
+	/**
 	 * 获取连接资源句柄的信息
-	 * ------------------------------
-	 * @param Integer $opt 选项名称
-	 * --------------------------
-	 * @return Array|String
+	 * @param integer $opt 选项名称
+	 * @return array|string
 	 * @author Verdient。
 	 */
 	public function getInfo($opt = null){
@@ -773,10 +631,8 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * hasError()
 	 * 是否存在错误
-	 * ----------
-	 * @return Boolean
+	 * @return bool
 	 * @author Verdient。
 	 */
 	public function hasError(){
@@ -784,23 +640,21 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getErrorCode()
 	 * 获取错误码
-	 * --------------
-	 * @return Integer
+	 * @return int|null
 	 * @author Verdient。
 	 */
 	public function getErrorCode(){
-		return curl_errno($this->_curl);
+		if($this->_isSent){
+			return curl_errno($this->_curl);
+		}
+		return null;
 	}
 
 	/**
-	 * getErrorType([Integer $errorCode = null])
 	 * 获取错误类型
-	 * -----------------------------------------
-	 * @param Integer $errorCode 错误码
-	 * -------------------------------
-	 * @return String
+	 * @param integer $errorCode 错误码
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getErrorType($errorCode = null){
@@ -808,34 +662,34 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * getErrorMessage()
 	 * 获取错误信息
-	 * ----=------------
-	 * @return String
+	 * @return string|null
 	 * @author Verdient。
 	 */
 	public function getErrorMessage(){
-		return curl_error($this->_curl);
+		if($this->_isSent){
+			return curl_error($this->_curl);
+		}
+		return null;
 	}
 
 	/**
-	 * getStatusCode()
 	 * 获取状态码
-	 * ---------------
-	 * @return Integer
+	 * @return int|null
 	 * @author Verdient。
 	 */
 	public function getStatusCode(){
-		return (int) $this->getInfo(CURLINFO_HTTP_CODE);
+		if($this->_isSent){
+			return (int) $this->getInfo(CURLINFO_HTTP_CODE);
+		}
+		return null;
 	}
 
 	/**
-	 * request(String $method[, Boolean $raw = false])
 	 * 请求
-	 * -----------------------------------------------
-	 * @param String $method 请求方式
-	 * -----------------------------
-	 * @return Response|String
+	 * @param string $method 请求方式
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function request($method, $raw = false){
@@ -844,39 +698,45 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * send([Boolean $raw = false])
 	 * 发送
-	 * ----------------------------
-	 * @param Boolean $raw 是否返回原文
-	 * ------------------------------
-	 * @return Response|String
+	 * @param bool $raw 是否返回原文
+	 * @return Response|string
 	 * @author Verdient。
 	 */
 	public function send($raw = false){
 		if($this->_isSent === false){
-			$this->trigger(static::EVENT_BEFORE_REQUEST, $this);
-			$this->prepare();
-			$this->_response = curl_exec($this->_curl);
+			$this->prepareRequest();
 			$this->_isSent = true;
-			$this->trigger(static::EVENT_AFTER_REQUEST, $this);
-			if($raw === true){
-				return $this->_response;
-			}
-			return ObjectHelper::create([
-				'class' => static::responseClass(),
-				'request' => $this,
-				'tryParse' => $this->tryParse,
-				'parsers' => $this->parsers
-			]);
+			$response = curl_exec($this->_curl);
+			return $this->prepareResponse($response);
 		}else{
 			throw new InvalidCallException('The request has been sent. Call reset() or create a new instance');
 		}
 	}
 
 	/**
-	 * prepareMethod()
+	 * 准备响应
+	 * @param string $response 响应原文
+	 * @param bool $raw 是否返回原文
+	 * @author Verdient。
+	 */
+	public function prepareResponse($response, $raw = false){
+		$this->_isSent = true;
+		$this->_response = $response;
+		$this->trigger(static::EVENT_AFTER_REQUEST, $this);
+		if($raw === true){
+			return $this->_response;
+		}
+		return ObjectHelper::create([
+			'class' => static::responseClass(),
+			'request' => $this,
+			'tryParse' => $this->tryParse,
+			'parsers' => $this->parsers
+		]);
+	}
+
+	/**
 	 * 准备请求方法
-	 * ---------------
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -893,9 +753,7 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * prepareContent()
 	 * 准备消息体
-	 * ----------------
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -916,25 +774,21 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * prepareHeader()
 	 * 准备头部
-	 * ---------------
 	 * @return Request
 	 * @author Verdient。
 	 */
 	protected function prepareHeader(){
 		$header = [];
-		foreach($this->_header as $name => $value){
-			$header[] = $name . ':' . $value;
+		foreach($this->_header as $key => $value){
+			$header[] = $key . ':' . $value;
 		}
 		$header = array_unique($header);
 		return $this->setOption(CURLOPT_HTTPHEADER, $header);
 	}
 
 	/**
-	 * prepareUrl()
 	 * 准备请求URL
-	 * ---------------
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -963,9 +817,7 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * prepareCUrl()
 	 * 准备cURL
-	 * -------------
 	 * @author Verdient。
 	 */
 	protected function prepareCUrl(){
@@ -981,25 +833,22 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * prepare()
-	 * 准备
-	 * ---------
+	 * 准备请求
 	 * @return Request
 	 * @author Verdient。
 	 */
-	public function prepare(){
+	public function prepareRequest(){
 		return $this
 			->prepareMethod()
 			->prepareUrl()
 			->prepareContent()
 			->prepareHeader()
-			->prepareCUrl();
+			->prepareCUrl()
+			->trigger(static::EVENT_BEFORE_REQUEST, $this);
 	}
 
 	/**
-	 * __destruct()
-	 * 析构函数
-	 * ------------
+	 * 析构时释放资源
 	 * @author Verdient。
 	 */
 	public function __destruct(){
