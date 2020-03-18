@@ -58,12 +58,11 @@ class BatchRequest
 	 */
 	public function send($raw = false){
 		$this->prepareRequest();
-		$active = null;
 		$mh = $this->getCurl();
 		do {
 			curl_multi_exec($mh, $running);
 			curl_multi_select($mh);
-		} while ($running > 0);
+		}while($running > 0);
 		$responses = [];
 		foreach($this->requests as $key => $request){
 			$ch = $request->getCurl();

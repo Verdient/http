@@ -141,3 +141,28 @@ $request->on(Request::EVENT_AFTER_REQUEST, function($request){
 
 });
 ```
+## 批量发送请求
+```php
+use Verdient\http\BatchRequest;
+
+/**
+ * 请求对象的集合
+ * 集合内的元素必须是Verdient\http\Request的实例
+ */
+$requests = [];
+for($i = 0; $i < 100; $i++){
+	$request = new Request();
+	$request->setUrl('{$url}');
+	$request->addQuery('name', $i);
+	$requests[] = $request;
+}
+
+$batch = new BatchRequest($requests);
+
+/**
+ * 返回内容为数组，keyValue对应关系与构造BatchRequest时传入的数组相同
+ * 遍历返回的结果，结果与Request调用send方法后返回的内容一致，使用方法也相同
+ * $raw为true时，返回响应原文而非相应的响应类
+ */
+$response = $batch->send($raw = false);
+```
