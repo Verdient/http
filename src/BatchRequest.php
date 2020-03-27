@@ -1,6 +1,8 @@
 <?php
 namespace Verdient\http;
 
+use chorus\UnsatisfiedExcepiton;
+
 /**
  * 批量请求
  * @author Verdient。
@@ -8,47 +10,23 @@ namespace Verdient\http;
 class BatchRequest
 {
 	/**
+	 * 批大小
+	 * @author Verdient。
+	 */
+	public $batchSize = 1000;
+
+	/**
 	 * @var array 请求集合
 	 * @author Verdient。
 	 */
 	protected $requests = [];
 
 	/**
-	 * @var resource CURL句柄
-	 * @author Verdient。
-	 */
-	protected $_curl = false;
-
-	/**
 	 * 注入请求对象
 	 * @author Verdient。
 	 */
 	public function __construct(array $requests){
-		$this->requests = $requests;
-	}
-
-	/**
-	 * 获取CURL句柄
-	 * @return resource
-	 * @author Verdient。
-	 */
-	public function getCurl(){
-		if($this->_curl === false){
-			$this->_curl = curl_multi_init();
-		}
-		return $this->_curl;
-	}
-
-	/**
-	 * 准备请求
-	 * @author Verdient。
-	 */
-	public function prepareRequest(){
-		$curl = $this->getCurl();
-		foreach($this->requests as $request){
-			$request->prepareRequest();
-			curl_multi_add_handle($curl, $request->getCurl());
-		}
+		$this->requests = array_chunk($requests, $this->batchSize, true);
 	}
 
 	/**
@@ -57,39 +35,26 @@ class BatchRequest
 	 * @return array
 	 */
 	public function send($raw = false){
-		$this->prepareRequest();
-		$mh = $this->getCurl();
-		do {
-			curl_multi_exec($mh, $running);
-			curl_multi_select($mh);
-		}while($running > 0);
 		$responses = [];
-		foreach($this->requests as $key => $request){
-			$ch = $request->getCurl();
-			$response = curl_multi_getcontent($ch);
-			curl_multi_remove_handle($mh, $ch);
-			$responses[$key] = $request->prepareResponse($response, $raw);
+		$mh = curl_multi_init();
+		foreach($this->requests as $requests){
+			foreach($requests as $request){
+				$request->prepareRequest();
+				curl_multi_add_handle($mh, $request->getCurl());
+			}
+			do{
+				curl_multi_exec($mh, $running);
+				curl_multi_select($mh);
+			}while($running > 0);
+			$responses = [];
+			foreach($requests as $key => $request){
+				$ch = $request->getCurl();
+				$response = curl_multi_getcontent($ch);
+				curl_multi_remove_handle($mh, $ch);
+				$responses[$key] = $request->prepareResponse($response, $raw);
+			}
 		}
+		@curl_multi_close($mh);
 		return $responses;
-	}
-
-	/**
-	 * 释放资源
-	 * @return Request
-	 * @author Verdient。
-	*/
-	public function releaseResource(){
-		if($this->_curl !== null){
-			@curl_multi_close($this->_curl);
-			$this->_curl = null;
-		}
-	}
-
-	/**
-	 * 析构时释放资源
-	 * @author Verdient。
-	 */
-	public function __destruct(){
-		$this->releaseResource();
 	}
 }

@@ -134,6 +134,24 @@ class Request extends \chorus\BaseObject
 	protected $_isSent = false;
 
 	/**
+	 * @var int 状态码
+	 * @author Verdient。
+	 */
+	protected $_statusCode = null;
+
+	/**
+	 * @var string 响应头部原文
+	 * @author Verdient。
+	 */
+	protected $_responseHeader = null;
+
+	/**
+	 * @var string 响应消息体原文
+	 * @author Verdient。
+	 */
+	protected $_responseContent = null;
+
+	/**
 	 * @inheritdoc
 	 * @author Verdient。
 	 */
@@ -503,11 +521,29 @@ class Request extends \chorus\BaseObject
 
 	/**
 	 * 获取响应内容
-	 * @return string|false
+	 * @return string|null
 	 * @author Verdient。
 	 */
 	public function getResponse(){
 		return $this->_response;
+	}
+
+	/**
+	 * 获取响应头部
+	 * @return string|null
+	 * @author Verdient。
+	 */
+	public function getResponseHeader(){
+		return $this->_responseHeader;
+	}
+
+	/**
+	 * 获取响应体
+	 * @return string|null
+	 * @author Verdient。
+	 */
+	public function getResponseContent(){
+		return $this->_responseContent;
 	}
 
 	/**
@@ -706,9 +742,13 @@ class Request extends \chorus\BaseObject
 	public function send($raw = false){
 		if($this->_isSent === false){
 			$this->prepareRequest();
+			$this->trigger(static::EVENT_BEFORE_REQUEST, $this);
 			$this->_isSent = true;
 			$response = curl_exec($this->_curl);
-			return $this->prepareResponse($response);
+			$response = $this->prepareResponse($response);
+			$this->trigger(static::EVENT_AFTER_REQUEST, $this);
+			$this->releaseResource();
+			return $response;
 		}else{
 			throw new InvalidCallException('The request has been sent. Call reset() or create a new instance');
 		}
@@ -723,7 +763,14 @@ class Request extends \chorus\BaseObject
 	public function prepareResponse($response, $raw = false){
 		$this->_isSent = true;
 		$this->_response = $response;
-		$this->trigger(static::EVENT_AFTER_REQUEST, $this);
+		$this->_statusCode = (int) $this->getInfo(CURLINFO_HTTP_CODE);
+		if($this->getOption(CURLOPT_HEADER)){
+			$headerSize = $this->getInfo(CURLINFO_HEADER_SIZE);
+			$this->_responseHeader = mb_substr($response, 0, $headerSize - 4);
+			$this->_responseContent = mb_substr($response, $headerSize);
+		}else{
+			$this->_responseContent = $response;
+		}
 		if($raw === true){
 			return $this->_response;
 		}
@@ -843,8 +890,7 @@ class Request extends \chorus\BaseObject
 			->prepareUrl()
 			->prepareContent()
 			->prepareHeader()
-			->prepareCUrl()
-			->trigger(static::EVENT_BEFORE_REQUEST, $this);
+			->prepareCUrl();
 	}
 
 	/**

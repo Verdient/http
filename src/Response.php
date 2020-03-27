@@ -5,25 +5,13 @@ use chorus\ObjectHelper;
 use Verdient\http\parser\ResponseParserInterface;
 
 /**
- * Response
  * 响应
- * --------
  * @author Verdient。
  */
 class Response extends \chorus\BaseObject
 {
 	/**
-	 * @var Boolean $tryParse
-	 * 是否尝试解析
-	 * -----------------------
-	 * @author Verdient。
-	 */
-	public $tryParse = true;
-
-	/**
-	 * @var const BUILT_IN_PARSERS
-	 * 内建解析器
-	 * ---------------------------
+	 * @var array 内建解析器
 	 * @author Verdient。
 	 */
 	const BUILT_IN_PARSERS = [
@@ -33,107 +21,89 @@ class Response extends \chorus\BaseObject
 	];
 
 	/**
-	 * @var Request $request
-	 * 请求对象
-	 * ---------------------
+	 * @var bool 是否尝试解析
+	 * @author Verdient。
+	 */
+	public $tryParse = true;
+
+	/**
+	 * @var Request 请求对象
 	 * @author Verdient。
 	 */
 	public $request;
 
 	/**
-	 * @var Array $parsers
-	 * 解析器
-	 * -------------------
+	 * @var array 解析器
 	 * @author Verdient。
 	*/
 	public $parsers = [];
 
 	/**
-	 * @var Integer $_statusCode
-	 * 状态码
-	 * -------------------------
+	 * @var int 状态码
 	 * @author Verdient。
 	 */
 	public $_statusCode = null;
 
 	/**
-	 * @var $_rawHeader
-	 * 原始头部
-	 * ----------------
+	 * @var string 原始响应
+	 * @author Verdient。
+	 */
+	protected $_rawReponse = null;
+
+	/**
+	 * @var string 原始头部
 	 * @author Verdient。
 	 */
 	protected $_rawHeader = null;
 
 	/**
-	 * @var $_rawContent
-	 * 原始消息体
-	 * -----------------
+	 * @var string 原始消息体
 	 * @author Verdient。
 	 */
 	protected $_rawContent = null;
 
 	/**
-	 * @var $_body
-	 * 消息体
-	 * -----------
+	 * @var mixed 消息体
 	 * @author Verdient。
 	 */
 	protected $_body = false;
 
 	/**
-	 * @var $_header
-	 * 头部信息
-	 * -------------
+	 * @var array 头部信息
 	 * @author Verdient。
 	 */
 	protected $_header = false;
 
 	/**
-	 * @var String $_contentType
-	 * 消息体类型
-	 * -------------------------
+	 * @var string 消息体类型
 	 * @author Verdient。
 	 */
 	protected $_contentType = false;
 
 	/**
-	 * @var String $_charset
-	 * 字符集
-	 * ---------------------
+	 * @var string 字符集
 	 * @author Verdient。
 	 */
 	protected $_charset = false;
 
 	/**
-	 * init()
-	 * 初始化
-	 * ------
 	 * @inheritdoc
-	 * -----------
 	 * @author Verdient。
 	 */
 	public function init(){
 		parent::init();
-		$response = $this->request->getResponse();
 		$this->_statusCode = $this->request->getStatusCode();
-		if($this->request->getOption(CURLOPT_HEADER)){
-			$headerSize = $this->request->getInfo(CURLINFO_HEADER_SIZE);
-			$this->_rawHeader = mb_substr($response, 0, $headerSize - 4);
-			$this->_rawContent = mb_substr($response, $headerSize);
-		}else{
-			$this->_rawContent = $response;
-		}
+		$this->_rawReponse = $this->request->getResponse();
+		$this->_rawHeader = $this->request->getResponseHeader();
+		$this->_rawContent = $this->request->getResponseContent();
 		$this->parsers = array_merge(static::BUILT_IN_PARSERS, $this->parsers);
 	}
 
 	/**
-	 * getParser(String $name[, String $charset = null])
 	 * 获取解析器
-	 * -------------------------------------------------
-	 * @param String $name 名称
-	 * @param String $charset 字符集
-	 * ----------------------------
-	 * @return ResponseParserInterface|Boolean
+	 * @param string $name 名称
+	 * @param string $charset 字符集
+	 * @return ResponseParserInterface|bool
 	 * @author Verdient。
 	 */
 	public function getParser($name, $charset = null){
@@ -153,10 +123,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getResponse()
 	 * 获取响应
-	 * -------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getRawResponse(){
@@ -164,10 +132,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getRawContent()
 	 * 获取消息体
-	 * ---------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getRawContent(){
@@ -175,10 +141,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getRawHeader()
 	 * 获取原始头部
-	 * --------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getRawHeader(){
@@ -186,10 +150,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getBody()
 	 * 获取消息体
-	 * ---------
-	 * @return Array|String|Null
+	 * @return array|string|null
 	 * @author Verdient。
 	 */
 	public function getBody(){
@@ -214,11 +176,13 @@ class Response extends \chorus\BaseObject
 					foreach(array_keys($this->parsers) as $name){
 						$parser = $this->getParser($name);
 						if($parser->can($content)){
-							$body = $parser->parse($content);
-							if($body){
-								$this->_body = $parser->parse($content);
-								break;
-							}
+							try{
+								$body = $parser->parse($content);
+								if($body){
+									$this->_body = $parser->parse($content);
+									break;
+								}
+							}catch(\Exception $e){}catch(\Error $e){}
 						}
 					}
 				}
@@ -228,10 +192,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getHeaders()
 	 * 获取头部
-	 * ------------
-	 * @return Array|Null
+	 * @return array|null
 	 * @author Verdient。
 	 */
 	public function getHeader(){
@@ -261,10 +223,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getCookie()
 	 * 获取Cookie
-	 * -----------
-	 * @return Array
+	 * @return array
 	 * @author Verdient。
 	 */
 	public function getCookie(){
@@ -282,12 +242,9 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * parseCookie(String $cookie)
 	 * 解析Cookie
-	 * ---------------------------
-	 * @param String $cookie cookie
-	 * ----------------------------
-	 * @return Array
+	 * @param string $cookie cookie
+	 * @return array
 	 * @author Verdient。
 	 */
 	public function parseCookie($cookie){
@@ -309,10 +266,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getContentType()
 	 * 获取消息体类型
-	 * ----------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getContentType(){
@@ -327,10 +282,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getCharset()
 	 * 获取字符集
-	 * ------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getCharset(){
@@ -347,10 +300,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getStatusCode
 	 * 获取状态码
-	 * -------------
-	 * @return Integer
+	 * @return int
 	 * @author Verdient。
 	 */
 	public function getStatusCode(){
@@ -358,10 +309,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * hasError()
 	 * 是否有错误
-	 * ----------
-	 * @return Boolean
+	 * @return bool
 	 * @author Verdient。
 	 */
 	public function hasError(){
@@ -369,10 +318,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getError()
 	 * 获取错误
-	 * ----------
-	 * @return Array|Null
+	 * @return array|null
 	 * @author Verdient。
 	 */
 	public function getError(){
@@ -392,10 +339,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getErrorMessage()
 	 * 获取错误提示信息
-	 * -----------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getErrorMessage(){
@@ -411,10 +356,8 @@ class Response extends \chorus\BaseObject
 	}
 
 	/**
-	 * getErrorCode()
 	 * 获取错误码
-	 * --------------
-	 * @return Mixed
+	 * @return mixed
 	 * @author Verdient。
 	 */
 	public function getErrorCode(){
