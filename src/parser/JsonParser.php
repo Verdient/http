@@ -2,34 +2,25 @@
 namespace Verdient\http\parser;
 
 /**
- * JsonParser
  * JSON 解析器
- * ----------
  * @author Verdient。
  */
 class JsonParser extends ResponseParser
 {
 	/**
-	 * @var Integer $depth
-	 * 递归深度
-	 * -------------------
+	 * @var int 递归深度
 	 * @author Verdient。
 	 */
 	public $depth = 512;
 
 	/**
-	 * @var $options
-	 * 参数
-	 * -------------
+	 * @var int 参数
 	 * @author Verdient。
 	 */
 	public $options = 0;
 
 	/**
-	 * can($response)
-	 * 是否可以解析
-	 * --------------
-	 * @return Boolean
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function can($response){
@@ -40,12 +31,7 @@ class JsonParser extends ResponseParser
 	}
 
 	/**
-	 * parse(String $response)
-	 * 解析
-	 * -----------------------
-	 * @param String $response 响应原文
-	 * ------------------------------
-	 * @return Boolean
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function parse($response){

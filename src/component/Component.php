@@ -5,75 +5,55 @@ use chorus\ObjectHelper;
 use chorus\StringHelper;
 
 /**
- * Component
  * 组件
- * ---------
  * @author Verdient。
  */
 class Component extends \chorus\BaseObject
 {
 	/**
-	 * @var $protocol
-	 * 协议
-	 * --------------
+	 * @var string 协议方法
 	 * @author Verdient。
 	 */
 	public $protocol = 'http';
 
 	/**
-	 * @var $host
-	 * 主机
-	 * ----------
+	 * @var string 主机域名
 	 * @author Verdient。
 	 */
 	public $host = null;
 
 	/**
-	 * @var $port
-	 * 端口
-	 * ----------
+	 * @var string 端口
 	 * @author Verdient。
 	 */
 	public $port = null;
 
 	/**
-	 * @var $routePrefix
-	 * 路由前缀
-	 * -----------------
+	 * @var string 路由前缀
 	 * @author Verdient。
 	 */
 	public $routePrefix = null;
 
 	/**
-	 * @var $routes
-	 * 路由集合
-	 * ------------
+	 * @var string 路由集合
 	 * @author Verdient。
 	 */
 	public $routes = [];
 
 	/**
-	 * @var String $_requestPath
-	 * 请求路径
-	 * -------------------------
+	 * @var string 请求路径
 	 * @author Verdient。
 	 */
 	protected $_requestPath;
 
 	/**
-	 * @var $_requestUrl
-	 * 请求地址
-	 * -----------------
+	 * @var string 请求地址集合
 	 * @author Verdient。
 	 */
 	protected $_requestUrl = [];
 
 	/**
-	 * init()
-	 * 初始化
-	 * ------
 	 * @inheritdoc
-	 * -----------
 	 * @author Verdient。
 	 */
 	public function init(){
@@ -94,21 +74,8 @@ class Component extends \chorus\BaseObject
 	}
 
 	/**
-	 * generateRequestId()
-	 * 生成请求编号
-	 * -------------------
-	 * @return String
-	 * @author Verdient。
-	 */
-	public function generateRequestId(){
-		return hash('sha256', random_bytes(128));
-	}
-
-	/**
-	 * getRequestPath()
 	 * 获取请求路径
-	 * ----------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getRequestPath(){
@@ -116,23 +83,18 @@ class Component extends \chorus\BaseObject
 	}
 
 	/**
-	 * getUrl(String $method)
 	 * 获取URL地址
-	 * ----------------------
-	 * @param String $method 方法
-	 * --------------------------
-	 * @return String|Null
+	 * @param string $name 名称
+	 * @return string|null
 	 * @author Verdient。
 	 */
-	public function getUrl($method){
-		return isset($this->_requestUrl[$method]) ? $this->_requestUrl[$method] : $this->getRequestPath();
+	public function getUrl($name){
+		return isset($this->_requestUrl[$name]) ? $this->_requestUrl[$name] : $this->getRequestPath();
 	}
 
 	/**
-	 * requestClass()
 	 * 请求类
-	 * --------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public static function requestClass(){
@@ -147,19 +109,16 @@ class Component extends \chorus\BaseObject
 	}
 
 	/**
-	 * prepareRequest(String $method[, $requestMethod = 'POST'])
 	 * 准备请求
-	 * ---------------------------------------------------------
-	 * @param String $method 方法
-	 * @param String $requestMethod 请求的方法
-	 * -------------------------------------
+	 * @param string $name 方法
+	 * @param string $method 请求的方法
 	 * @return Request
 	 * @author Verdient。
 	 */
-	public function prepareRequest($method, $requestMethod = 'POST'){;
+	public function prepareRequest($name, $method = 'POST'){;
 		$request = ObjectHelper::create(static::requestClass());
-		$request->setUrl($this->getUrl($method));
-		$request->setMethod($requestMethod);
+		$request->setUrl($this->getUrl($name));
+		$request->setMethod($method);
 		return $request;
 	}
 }

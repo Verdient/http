@@ -2,26 +2,19 @@
 namespace Verdient\http\parser;
 
 /**
- * XmlParser
  * Xml解析器
- * ---------
  * @author Verdient。
  */
 class XmlParser extends ResponseParser
 {
 	/**
-	 * @var Integer $options
-	 * 参数
-	 * ---------------------
+	 * @var int 参数
 	 * @author Verdient。
 	 */
 	public $options = LIBXML_NOCDATA;
 
 	/**
-	 * can($response)
-	 * 是否可以解析
-	 * --------------
-	 * @return Boolean
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function can($response){
@@ -32,12 +25,7 @@ class XmlParser extends ResponseParser
 	}
 
 	/**
-	 * parse(String $response)
-	 * 解析
-	 * ----------------------
-	 * @param String $reponse 响应原文
-	 * ------------------------------
-	 * @return Boolean
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function parse($response){
@@ -47,12 +35,9 @@ class XmlParser extends ResponseParser
 	}
 
 	/**
-	 * convertXmlToArray(String|SimpleXMLElement $xml)
 	 * 将XML转换为数组
-	 * -----------------------------------------------
-	 * @param String|SimpleXMLElement $xml 要转换的XML
-	 * ----------------------------------------------
-	 * @return Array
+	 * @param string|SimpleXMLElement $xml 要转换的XML
+	 * @return array
 	 * @author Verdient。
 	 */
 	protected function convertXmlToArray($xml){

@@ -54,7 +54,7 @@ class Response extends \chorus\BaseObject
 	 * @var string 原始头部
 	 * @author Verdient。
 	 */
-	protected $_rawHeader = null;
+	protected $_rawHeaders = null;
 
 	/**
 	 * @var string 原始消息体
@@ -72,7 +72,7 @@ class Response extends \chorus\BaseObject
 	 * @var array 头部信息
 	 * @author Verdient。
 	 */
-	protected $_header = false;
+	protected $_headers = false;
 
 	/**
 	 * @var string 消息体类型
@@ -90,13 +90,21 @@ class Response extends \chorus\BaseObject
 	 * @inheritdoc
 	 * @author Verdient。
 	 */
-	public function init(){
-		parent::init();
-		$this->_statusCode = $this->request->getStatusCode();
-		$this->_rawReponse = $this->request->getResponse();
-		$this->_rawHeader = $this->request->getResponseHeader();
-		$this->_rawContent = $this->request->getResponseContent();
+	public function __construct($config = [], $statusCode, $headers, $content, $response){
+		parent::__construct($config);
 		$this->parsers = array_merge(static::BUILT_IN_PARSERS, $this->parsers);
+		$this->_statusCode = $statusCode;
+		if(is_array($headers)){
+			$this->_headers = $headers;
+		}else{
+			$this->_rawHeaders = $headers;
+		}
+		if(is_array($content)){
+			$this->_body = $content;
+		}else{
+			$this->_rawContent = $content;
+		}
+		$this->_rawReponse = $response;
 	}
 
 	/**
@@ -106,7 +114,7 @@ class Response extends \chorus\BaseObject
 	 * @return ResponseParserInterface|bool
 	 * @author Verdient。
 	 */
-	public function getParser($name, $charset = null){
+	protected function getParser($name, $charset = null){
 		$parser = strtolower($name);
 		$parser = isset($this->parsers[$parser]) ? $this->parsers[$parser] : null;
 		if($parser){
@@ -128,7 +136,7 @@ class Response extends \chorus\BaseObject
 	 * @author Verdient。
 	 */
 	public function getRawResponse(){
-		return $this->request->getResponse();
+		return $this->_rawReponse;
 	}
 
 	/**
@@ -145,8 +153,8 @@ class Response extends \chorus\BaseObject
 	 * @return string
 	 * @author Verdient。
 	 */
-	public function getRawHeader(){
-		return $this->_rawHeader;
+	public function getRawHeaders(){
+		return $this->_rawHeaders;
 	}
 
 	/**
@@ -196,46 +204,49 @@ class Response extends \chorus\BaseObject
 	 * @return array|null
 	 * @author Verdient。
 	 */
-	public function getHeader(){
-		if($this->_header === false){
-			$this->_header = null;
-			if($this->_rawHeader){
-				$this->_header = [];
-				$headers = explode("\r\n", $this->_rawHeader);
+	public function getHeaders(){
+		if($this->_headers === false){
+			$this->_headers = null;
+			if($this->_rawHeaders){
+				$this->_headers = [];
+				$headers = explode("\r\n", $this->_rawHeaders);
 				foreach($headers as $header){
 					if($header){
 						$header = explode(': ', $header);
 						if(isset($header[1])){
-							if(isset($this->_header[$header[0]])){
-								if(!is_array($this->_header[$header[0]])){
-									$this->_header[$header[0]] = [$this->_header[$header[0]]];
+							if(isset($this->_headers[$header[0]])){
+								if(!is_array($this->_headers[$header[0]])){
+									$this->_headers[$header[0]] = [$this->_headers[$header[0]]];
 								}
-								$this->_header[$header[0]][] = $header[1];
+								$this->_headers[$header[0]][] = $header[1];
 							}else{
-								$this->_header[$header[0]] = $header[1];
+								$this->_headers[$header[0]] = $header[1];
 							}
 						}
 					}
 				}
 			}
 		}
-		return $this->_header;
+		return $this->_headers;
 	}
 
 	/**
-	 * 获取Cookie
+	 * 获取Cookies
 	 * @return array
 	 * @author Verdient。
 	 */
-	public function getCookie(){
+	public function getCookies(){
 		$result = [];
-		if($cookies = $this->getHeader('Set-Cookie')){
-			if(!is_array($cookies)){
-				$cookies = [$cookies];
-			}
-			foreach($cookies as $cookie){
-				$cookie = $this->parseCookie($cookie);
-				$result[$cookie['key']] = $cookie;
+		$headers = $this->getHeaders();
+		if(isset($headers['Set-Cookie'])){
+			if($cookies = $headers['Set-Cookie']){
+				if(!is_array($cookies)){
+					$cookies = [$cookies];
+				}
+				foreach($cookies as $cookie){
+					$cookie = $this->parseCookie($cookie);
+					$result[$cookie['key']] = $cookie;
+				}
 			}
 		}
 		return $result;
@@ -273,7 +284,7 @@ class Response extends \chorus\BaseObject
 	public function getContentType(){
 		if($this->_contentType === false){
 			$this->_contentType = null;
-			$header = $this->getHeader();
+			$header = $this->getHeaders();
 			if(isset($header['Content-Type'])){
 				$this->_contentType = explode(';', $header['Content-Type'])[0];
 			}
@@ -289,7 +300,7 @@ class Response extends \chorus\BaseObject
 	public function getCharset(){
 		if($this->_charset === false){
 			$this->_charset = null;
-			$header = $this->getHeader();
+			$header = $this->getHeaders();
 			if(isset($header['Content-Type'])){
 				if(preg_match('/charset=(.*)/i', $header['Content-Type'], $matches)){
 					$this->_charset = $matches[1];
@@ -306,69 +317,5 @@ class Response extends \chorus\BaseObject
 	 */
 	public function getStatusCode(){
 		return $this->_statusCode;
-	}
-
-	/**
-	 * 是否有错误
-	 * @return bool
-	 * @author Verdient。
-	 */
-	public function hasError(){
-		return $this->request->hasError();
-	}
-
-	/**
-	 * 获取错误
-	 * @return array|null
-	 * @author Verdient。
-	 */
-	public function getError(){
-		if($this->hasError()){
-			if($this->request->hasError()){
-				$code = $this->request->getErrorCode();
-				return [
-					'code' => $code,
-					'type' => $this->request->getErrorType($code),
-					'message' => $this->request->getErrorMessage()
-				];
-			}else{
-				return [];
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * 获取错误提示信息
-	 * @return string
-	 * @author Verdient。
-	 */
-	public function getErrorMessage(){
-		if($this->hasError()){
-			$error = $this->getError();
-			if(isset($error['message'])){
-				return $error['message'];
-			}else{
-				return 'Unknown Error';
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * 获取错误码
-	 * @return mixed
-	 * @author Verdient。
-	 */
-	public function getErrorCode(){
-		if($this->hasError()){
-			$error = $this->getError();
-			if(isset($error['code'])){
-				return $error['code'];
-			}else{
-				return $this->getStatusCode();
-			}
-		}
-		return null;
 	}
 }

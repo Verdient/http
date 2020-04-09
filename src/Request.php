@@ -1,11 +1,11 @@
 <?php
 namespace Verdient\http;
 
-use chorus\InvalidCallException;
 use chorus\InvalidConfigException;
 use chorus\InvalidParamException;
 use chorus\ObjectHelper;
-use Verdient\http\builder\Builder;
+use Verdient\http\builder\BuilderInterface;
+use Verdient\http\transport\TransportInterface;
 
 /**
  * 请求
@@ -36,17 +36,12 @@ class Request extends \chorus\BaseObject
 	];
 
 	/**
-	 * @var array 默认参数
+	 * @var array 内建传输通道
 	 * @author Verdient。
 	 */
-	const DEFAULT_OPTIONS = [
-		CURLOPT_TIMEOUT => 30,
-		CURLOPT_CONNECTTIMEOUT => 30,
-		CURLOPT_RETURNTRANSFER => true,
-		CURLOPT_HEADER => true,
-		CURLOPT_SSL_VERIFYPEER => false,
-		CURLOPT_SSL_VERIFYHOST => false,
-		CURLOPT_HTTPHEADER => []
+	const BUILT_IN_TRANSPORTS = [
+		'cUrl' => 'Verdient\http\transport\CUrlTransport',
+		'coroutine' => 'Verdient\http\transport\CoroutineTransport'
 	];
 
 	/**
@@ -62,10 +57,22 @@ class Request extends \chorus\BaseObject
 	public $parsers = [];
 
 	/**
+	 * @var array 传输通道
+	 * @author Verdient。
+	 */
+	public $transports = [];
+
+	/**
 	 * @var string|callback 消息体序列化器
 	 * @author Verdient。
 	 */
 	public $bodySerializer = 'json';
+
+	/**
+	 * @var string 传输通道
+	 * @author Verdient。
+	 */
+	public $transport = 'cUrl';
 
 	/**
 	 * @var bool 是否尝试解析
@@ -74,10 +81,10 @@ class Request extends \chorus\BaseObject
 	public $tryParse = true;
 
 	/**
-	 * @var resource cUrl句柄
+	 * @var TransportInterface 传输实例
 	 * @author Verdient。
 	 */
-	protected $_curl = null;
+	protected $_transport = null;
 
 	/**
 	 * @var string 请求地址
@@ -95,7 +102,7 @@ class Request extends \chorus\BaseObject
 	 * @var array 头部参数
 	 * @author Verdient。
 	 */
-	protected $_header = [];
+	protected $_headers = [];
 
 	/**
 	 * @var array 查询参数
@@ -116,40 +123,16 @@ class Request extends \chorus\BaseObject
 	protected $_content = null;
 
 	/**
-	 * @var string 响应原文
+	 * @var string 代理地址
 	 * @author Verdient。
 	 */
-	protected $_response = null;
+	protected $_proxyHost = null;
 
 	/**
-	 * @var array 参数
+	 * @var int 代理地址
 	 * @author Verdient。
 	 */
-	protected $_options = [];
-
-	/**
-	 * @var bool 是否已发送
-	 * @author Verdient。
-	 */
-	protected $_isSent = false;
-
-	/**
-	 * @var int 状态码
-	 * @author Verdient。
-	 */
-	protected $_statusCode = null;
-
-	/**
-	 * @var string 响应头部原文
-	 * @author Verdient。
-	 */
-	protected $_responseHeader = null;
-
-	/**
-	 * @var string 响应消息体原文
-	 * @author Verdient。
-	 */
-	protected $_responseContent = null;
+	protected $_proxyPort = null;
 
 	/**
 	 * @inheritdoc
@@ -158,6 +141,7 @@ class Request extends \chorus\BaseObject
 	public function init(){
 		parent::init();
 		$this->builders = array_merge(static::BUILT_IN_BUILDERS, $this->builders);
+		$this->transports = array_merge(static::BUILT_IN_TRANSPORTS, $this->transports);
 	}
 
 	/**
@@ -179,8 +163,8 @@ class Request extends \chorus\BaseObject
 
 	/**
 	 * 获取构建器
-	 * @param String $builder 构建器
-	 * @return Builder
+	 * @param string $builder 构建器
+	 * @return BuilderInterface
 	 * @author Verdient。
 	 */
 	public function getBuilder($name){
@@ -188,8 +172,8 @@ class Request extends \chorus\BaseObject
 		$builder = isset($this->builders[$builder]) ? $this->builders[$builder] : null;
 		if($builder){
 			$builder = ObjectHelper::create($builder);
-			if(!$builder instanceof Builder){
-				throw new InvalidConfigException('builder must instance of ' . Builder::class);
+			if(!$builder instanceof BuilderInterface){
+				throw new InvalidConfigException('builder must instance of ' . BuilderInterface::class);
 			}
 			return $builder;
 		}
@@ -197,83 +181,23 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * GET访问
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
+	 * 获取传输通道
+	 * @param $name 通道名称
+	 * @return TransportInterface
 	 * @author Verdient。
 	 */
-	public function get($raw = false){
-		return $this->request('GET', $raw);
-	}
-
-	/**
-	 * HEAD访问
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
-	 * @author Verdient。
-	 */
-	public function head($raw = false){
-		return $this->request('HEAD', $raw);
-	}
-
-	/**
-	 * POST访问
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
-	 * @author Verdient。
-	 */
-	public function post($raw = false){
-		return $this->request('POST', $raw);
-	}
-
-	/**
-	 * PUT访问
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
-	 * @author Verdient。
-	 */
-	public function put($raw = false){
-		return $this->request('PUT', $raw);
-	}
-
-	/**
-	 * PATCH访问
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
-	 * @author Verdient。
-	 */
-	public function patch($raw = false){
-		return $this->request('PATCH', $raw);
-	}
-
-	/**
-	 * DELETE访问
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
-	 * @author Verdient。
-	 */
-	public function delete($raw = false){
-		return $this->request('DELETE', $raw);
-	}
-
-	/**
-	 * OPTIONS访问
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
-	 * @author Verdient。
-	 */
-	public function options($raw = false){
-		return $this->request('OPTIONS', $raw);
-	}
-
-	/**
-	 * TRACE访问
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
-	 * @author Verdient。
-	 */
-	public function trace($raw = false){
-		return $this->request('TRACE', $raw);
+	public function getTransport(){
+		if($this->_transport === null){
+			if(!isset($this->transports[$this->transport])){
+				throw new InvalidConfigException('Unkrown transport: ' . $this->transport);
+			}
+			$transport = ObjectHelper::create($this->transports[$this->transport]);
+			if(!$transport instanceof TransportInterface){
+				throw new InvalidConfigException('transport must instance of ' . TransportInterface::class);
+			}
+			$this->_transport = $transport;
+		}
+		return $this->_transport;
 	}
 
 	/**
@@ -287,7 +211,7 @@ class Request extends \chorus\BaseObject
 
 	/**
 	 * 设置访问地址
-	 * @param String $url URL地址
+	 * @param string $url URL地址
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -301,30 +225,30 @@ class Request extends \chorus\BaseObject
 	 * @return array
 	 * @author Verdient。
 	 */
-	public function getHeader(){
-		return $this->_header;
+	public function getHeaders(){
+		return $this->_headers;
 	}
 
 	/**
 	 * 设置发送的头部参数
-	 * @param array $header 头部参数
+	 * @param array $headers 头部参数
 	 * @return Request
 	 * @author Verdient。
 	 */
-	public function setHeader(array $header){
-		$this->_header = $header;
+	public function setHeaders(array $headers){
+		$this->_headers = $headers;
 		return $this;
 	}
 
 	/**
 	 * 添加头部
-	 * @param String $name 名称
-	 * @param Mixed $value 值
+	 * @param string $name 名称
+	 * @param string|array $value 值
 	 * @return Request
 	 * @author Verdient。
 	 */
 	public function addHeader($key, $value){
-		$this->_header[$key] = $value;
+		$this->_headers[$key] = $value;
 		return $this;
 	}
 
@@ -364,8 +288,8 @@ class Request extends \chorus\BaseObject
 
 	/**
 	 * 添加查询信息
-	 * @param String $name 名称
-	 * @param Mixed $value 内容
+	 * @param string $name 名称
+	 * @param mixed $value 内容
 	 * @return Request
 	 * @author Verdient。
 	 */
@@ -403,7 +327,7 @@ class Request extends \chorus\BaseObject
 	 * @return Request
 	 * @author Verdient。
 	 */
-	public function setBody(Array $body){
+	public function setBody(array $body){
 		$this->_body = $body;
 		return $this;
 	}
@@ -446,7 +370,7 @@ class Request extends \chorus\BaseObject
 
 	/**
 	 * 设置消息体
-	 * @param string|array|Builder $data 发送的数据
+	 * @param string|array|BuilderInterface $data 发送的数据
 	 * @param string|callback $serializer 序列化器
 	 * @return Request
 	 * @author Verdient。
@@ -457,46 +381,34 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * 格式化消息体
-	 * @param string|array|Builder $data 发送的数据
-	 * @param string|callback $serializer 序列化器
-	 * @throws Exception
-	 * @return string
-	 * @author Verdient。
-	 */
-	public function normalizeContent($data, $serializer = null){
-		if(is_callable($serializer)){
-			$data = call_user_func($serializer, $data);
-		}else if(is_array($data) && is_string($serializer) && !empty($serializer)){
-			$builder = $this->getBuilder($serializer);
-			$builder->setElements($data);
-			$data = $builder;
-		}
-		if($data instanceof Builder){
-			foreach($data->headers() as $name => $value){
-				$this->addHeader($name, $value);
-			}
-			$data = $data->toString();
-		}
-		if(!is_string($data)){
-			throw new InvalidParamException('content must be a string');
-		}
-		return $data;
-	}
-
-	/**
 	 * 设置代理
-	 * @param string $address 地址
+	 * @param string $host 地址
 	 * @param int $port 端口
 	 * @return Request
 	 * @author Verdient。
 	 */
-	public function setProxy($address, $port = null){
-		$this->setOption(CURLOPT_PROXY, $address);
-		if($port){
-			$this->setOption(CURLOPT_PROXYPORT, $port);
-		}
+	public function setProxy($host, $port = null){
+		$this->_proxyHost = $host;
+		$this->_proxyPort = $port;
 		return $this;
+	}
+
+	/**
+	 * 获取代理地址
+	 * @return string
+	 * @author Verdient。
+	 */
+	public function getProxyHost(){
+		return $this->_proxyHost;
+	}
+
+	/**
+	 * 获取代理端口
+	 * @return int
+	 * @author Verdient。
+	 */
+	public function getProxyPort(){
+		return $this->_proxyPort;
 	}
 
 	/**
@@ -520,327 +432,75 @@ class Request extends \chorus\BaseObject
 	}
 
 	/**
-	 * 获取响应内容
-	 * @return string|null
-	 * @author Verdient。
-	 */
-	public function getResponse(){
-		return $this->_response;
-	}
-
-	/**
-	 * 获取响应头部
-	 * @return string|null
-	 * @author Verdient。
-	 */
-	public function getResponseHeader(){
-		return $this->_responseHeader;
-	}
-
-	/**
-	 * 获取响应体
-	 * @return string|null
-	 * @author Verdient。
-	 */
-	public function getResponseContent(){
-		return $this->_responseContent;
-	}
-
-	/**
-	 * 设置参数
-	 * @param string $name 名称
-	 * @param mixed $value 内容
-	 * @return Request
-	 * @author Verdient。
-	 */
-	public function setOption($name, $value){
-		$this->_options[$name] = $value;
-		return $this;
-	}
-
-	/**
-	 * 批量设置参数
-	 * @param array $options 参数集合
-	 * @return Request
-	 * @author Verdient。
-	 */
-	public function setOptions(Array $options){
-		foreach($options as $name => $value){
-			$this->setOption($name, $value);
-		}
-		return $this;
-	}
-
-	/**
-	 * 删除参数
-	 * @param string $name 名称
-	 * @return Request
-	 * @author Verdient。
-	 */
-	public function unsetOption($name){
-		if(isset($this->_options[$name])){
-			unset($this->_options[$name]);
-		}
-		return $this;
-	}
-
-	/**
-	 * 重置选项
-	 * @return Request
-	 * @author Verdient。
-	 */
-	public function resetOptions(){
-		$this->_options = [];
-		return $this;
-	}
-
-	/**
 	 * 重置
 	 * @return Request
 	 * @author Verdient。
 	 */
 	public function reset(){
-		$this->releaseResource();
 		$this->_url = null;
-		$this->_header = [];
+		$this->_method = 'GET';
+		$this->_headers = [];
 		$this->_query = [];
 		$this->_body = [];
 		$this->_content = null;
-		$this->_options = [];
-		$this->_response = null;
-		$this->_isSent = false;
+		$this->_proxyHost = null;
+		$this->_proxyPort = null;
 		return $this;
-	}
-
-	/**
-	 * 释放资源
-	 * @return Request
-	 * @author Verdient。
-	*/
-	public function releaseResource(){
-		if($this->_curl !== null){
-			@curl_close($this->_curl);
-			$this->_curl = null;
-		}
-	}
-
-	/**
-	 * 获取选项内容
-	 * @param string $name 名称
-	 * @return mixed
-	 * @author Verdient。
-	 */
-	public function getOption($name){
-		$options = $this->getOptions();
-		return isset($options[$name]) ? $options[$name] : false;
-	}
-
-	/**
-	 * 获取所有的选项
-	 * @return array
-	 * @author Verdient。
-	 */
-	public function getOptions(){
-		return $this->_options + static::DEFAULT_OPTIONS;
-	}
-
-	/**
-	 * 获取CURL句柄
-	 * @author Verdient。
-	 */
-	public function getCurl(){
-		return $this->_curl;
-	}
-
-	/**
-	 * 获取连接资源句柄的信息
-	 * @param integer $opt 选项名称
-	 * @return array|string
-	 * @author Verdient。
-	 */
-	public function getInfo($opt = null){
-		if($this->_curl !== null){
-			return curl_getinfo($this->_curl, $opt);
-		}else{
-			return $opt ? null : [];
-		}
-	}
-
-	/**
-	 * 是否存在错误
-	 * @return bool
-	 * @author Verdient。
-	 */
-	public function hasError(){
-		return !!$this->getErrorCode();
-	}
-
-	/**
-	 * 获取错误码
-	 * @return int|null
-	 * @author Verdient。
-	 */
-	public function getErrorCode(){
-		if($this->_isSent){
-			return curl_errno($this->_curl);
-		}
-		return null;
-	}
-
-	/**
-	 * 获取错误类型
-	 * @param integer $errorCode 错误码
-	 * @return string
-	 * @author Verdient。
-	 */
-	public function getErrorType($errorCode = null){
-		return curl_strerror($errorCode ?: $this->getErrorCode());
-	}
-
-	/**
-	 * 获取错误信息
-	 * @return string|null
-	 * @author Verdient。
-	 */
-	public function getErrorMessage(){
-		if($this->_isSent){
-			return curl_error($this->_curl);
-		}
-		return null;
-	}
-
-	/**
-	 * 获取状态码
-	 * @return int|null
-	 * @author Verdient。
-	 */
-	public function getStatusCode(){
-		if($this->_isSent){
-			return (int) $this->getInfo(CURLINFO_HTTP_CODE);
-		}
-		return null;
 	}
 
 	/**
 	 * 请求
 	 * @param string $method 请求方式
-	 * @param bool $raw 是否返回原文
 	 * @return Response|string
 	 * @author Verdient。
 	 */
-	public function request($method, $raw = false){
+	public function request($method){
 		$this->setMethod($method);
-		return $this->send($raw);
+		return $this->send();
 	}
 
 	/**
 	 * 发送
-	 * @param bool $raw 是否返回原文
-	 * @return Response|string
+	 * @return Response
 	 * @author Verdient。
 	 */
-	public function send($raw = false){
-		if($this->_isSent === false){
-			$this->prepareRequest();
-			$this->trigger(static::EVENT_BEFORE_REQUEST, $this);
-			$this->_isSent = true;
-			$response = curl_exec($this->_curl);
-			$response = $this->prepareResponse($response);
-			$this->trigger(static::EVENT_AFTER_REQUEST, $this);
-			$this->releaseResource();
-			return $response;
-		}else{
-			throw new InvalidCallException('The request has been sent. Call reset() or create a new instance');
-		}
-	}
-
-	/**
-	 * 准备响应
-	 * @param string $response 响应原文
-	 * @param bool $raw 是否返回原文
-	 * @author Verdient。
-	 */
-	public function prepareResponse($response, $raw = false){
-		$this->_isSent = true;
-		$this->_response = $response;
-		$this->_statusCode = (int) $this->getInfo(CURLINFO_HTTP_CODE);
-		if($this->getOption(CURLOPT_HEADER)){
-			$headerSize = $this->getInfo(CURLINFO_HEADER_SIZE);
-			$this->_responseHeader = mb_substr($response, 0, $headerSize - 4);
-			$this->_responseContent = mb_substr($response, $headerSize);
-		}else{
-			$this->_responseContent = $response;
-		}
-		if($raw === true){
-			return $this->_response;
-		}
-		return ObjectHelper::create([
+	public function send(){
+		$this->trigger(static::EVENT_BEFORE_REQUEST, $this);
+		$this->prepare();
+		list($statusCode, $headers, $content, $response) = $this->getTransport()->send($this);
+		$result = ObjectHelper::create([
 			'class' => static::responseClass(),
 			'request' => $this,
 			'tryParse' => $this->tryParse,
 			'parsers' => $this->parsers
-		]);
+		], $statusCode, $headers, $content, $response);
+		$this->trigger(static::EVENT_AFTER_REQUEST, $this, $result);
+		return $result;
 	}
 
 	/**
-	 * 准备请求方法
+	 * 准备请求
 	 * @return Request
 	 * @author Verdient。
 	 */
-	protected function prepareMethod(){
-		if($this->_method === 'HEAD'){
-			$this->setOption(CURLOPT_NOBODY, true);
-			$this->unsetOption(CURLOPT_WRITEFUNCTION);
-		}
-		if(!in_array($this->_method, ['POST', 'PUT', 'DELETE', 'PATCH'])){
-			$this->unsetOption(CURLOPT_POSTFIELDS);
-			$this->unsetOption(CURLOPT_POST);
-		}
-		return $this->setOption(CURLOPT_CUSTOMREQUEST, $this->_method);
-	}
-
-	/**
-	 * 准备消息体
-	 * @return Request
-	 * @author Verdient。
-	 */
-	protected function prepareContent(){
+	public function prepare(){
+		$this->_url = $this->normalizeUrl($this->_url);
 		if(in_array($this->_method, ['POST', 'PUT', 'DELETE', 'PATCH'])){
-			if(!empty($this->_content)){
-				$content = $this->_content;
-			}else if(!empty($this->_body)){
-				$content = $this->normalizeContent($this->_body, $this->bodySerializer);
-			}
-			if(!empty($content)){
-				$this->setOption(CURLOPT_POST, true);
-				$this->setOption(CURLOPT_POSTFIELDS, $content);
-				$this->addHeader('Content-Length', strlen($content));
+			if(empty($this->_content) && !empty($this->_body)){
+				$this->_content = $this->normalizeContent($this->_body, $this->bodySerializer);
 			}
 		}
 		return $this;
 	}
 
 	/**
-	 * 准备头部
-	 * @return Request
+	 * 格式化URL
+	 * @param string $url URL地址
+	 * @return string
 	 * @author Verdient。
 	 */
-	protected function prepareHeader(){
-		$header = [];
-		foreach($this->_header as $key => $value){
-			$header[] = $key . ':' . $value;
-		}
-		$header = array_unique($header);
-		return $this->setOption(CURLOPT_HTTPHEADER, $header);
-	}
-
-	/**
-	 * 准备请求URL
-	 * @return Request
-	 * @author Verdient。
-	 */
-	protected function prepareUrl(){
-		$url = parse_url($this->_url);
+	public function normalizeUrl($url){
+		$url = parse_url($url);
 		foreach(['scheme', 'host'] as $name){
 			if(!isset($url[$name])){
 				throw new InvalidParamException('Url is not a valid url');
@@ -850,54 +510,43 @@ class Request extends \chorus\BaseObject
 		if(!empty($this->_query)){
 			$query .= ($query ? '&' : '?') . http_build_query($this->_query);
 		}
-		$url =
-			$url['scheme'] .
-			'://' .
+		$url = $url['scheme'] . '://' .
 			(isset($url['user']) ? $url['user'] : '') .
 			(isset($url['pass']) ? ((isset($url['user']) ? ':' : '') . $url['pass']) : '') .
 			((isset($url['pass']) || isset($url['pass'])) ? '@' : '') .
 			$url['host'] .
+			(isset($url['port']) ? ':' . $url['port'] : '') .
 			(isset($url['path']) ? $url['path'] : '') .
 			$query .
 			(isset($url['fragment']) ? ('#' . $url['fragment']) : '');
-		return $this->setOption(CURLOPT_URL, $url);
+		return $url;
 	}
 
 	/**
-	 * 准备cURL
+	 * 格式化消息体
+	 * @param string|array|BuilderInterface $data 发送的数据
+	 * @param string|callback $serializer 序列化器
+	 * @throws Exception
+	 * @return string
 	 * @author Verdient。
 	 */
-	protected function prepareCUrl(){
-		$options = [];
-		foreach($this->getOptions() as $key => $value){
-			if(is_numeric($key)){
-				$options[$key] = $value;
-			}
+	public function normalizeContent($data, $serializer = null){
+		if(is_callable($serializer)){
+			$data = call_user_func($serializer, $data);
+		}else if(is_string($serializer) && !empty($serializer) && is_array($data)){
+			$builder = $this->getBuilder($serializer);
+			$builder->setElements($data);
+			$data = $builder;
 		}
-		$this->_curl = curl_init();
-		curl_setopt_array($this->_curl, $options);
-		return $this;
-	}
-
-	/**
-	 * 准备请求
-	 * @return Request
-	 * @author Verdient。
-	 */
-	public function prepareRequest(){
-		return $this
-			->prepareMethod()
-			->prepareUrl()
-			->prepareContent()
-			->prepareHeader()
-			->prepareCUrl();
-	}
-
-	/**
-	 * 析构时释放资源
-	 * @author Verdient。
-	 */
-	public function __destruct(){
-		$this->releaseResource();
+		if($data instanceof BuilderInterface){
+			foreach($data->headers() as $name => $value){
+				$this->addHeader($name, $value);
+			}
+			$data = $data->toString();
+		}
+		if(!is_string($data)){
+			throw new InvalidParamException('content must be a string');
+		}
+		return $data;
 	}
 }

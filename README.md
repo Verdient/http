@@ -32,6 +32,23 @@ $parsers = [
 ];
 
 /**
+ * 传输组件配置
+ * 内置了两种传输组件，分别是：
+ *   cUrl, 基于cUrl的传输组件
+ *   coroutine 基于Swoole的协程的传输组件
+ * 可自行新增或覆盖相应的传输组件
+ */
+$transports = [
+	'cUrl' => 'Verdient\http\transport\CUrlTransport',
+	'coroutine' => 'Verdient\http\transport\CoroutineTransport'
+];
+
+/**
+ * 传输组件，默认为cUrl
+ */
+$transport = 'cUrl';
+
+/**
  * 消息体序列化器 (可选)
  * 可以是字符串也可以是一个回调函数
  * 当值为字符串时，会从$builders中选取与之对应的构建器进行序列化
@@ -52,81 +69,52 @@ $tryParse = true;
 $request = new Request([
 	'builders' => $builders,
 	'parsers' => $parsers,
+	'transports' => $transports,
+	'transport' => $transport,
 	'bodySerializer' => $bodySerializer,
 	'tryParse' => $tryParse
 ]);
 ```
 ## 设置请求参数
 ```php
-$request->setUrl(${url}); //设置请求URL
-$request->setMethod(${method}); //设置请求方法
-$request->setHeader([${name} => ${value}, ...]); //设置请求头部
-$request->setQuery([${name} => ${value}, ...]); //设置查询参数
-$request->setBody([${name} => ${value}, ...]); //设置消息体参数
-$request->setProxy(${address}, ${port}=null); //设置代理
-$request->setOption(${name}, ${value}); //设置CURL参数
-$request->setOptions([${name} => ${value}, ...]); //批量设置CURL参数
+$request->setUrl($url); //设置请求URL
+$request->setMethod($method); //设置请求方法
+$request->setHeaders([$name => $value, ...]); //设置请求头部
+$request->setQuery([$name => $value, ...]); //设置查询参数
+$request->setBody([$name => $value, ...]); //设置消息体参数
+$request->setProxy($address, $port=null); //设置代理
 ```
 ## 添加参数
 `Header`, `Query`, `Body`均支持添加参数，相应方法为：
-- addHeader(${name}, ${value})
-- addFilterHeader(${name}, ${value})
-- addQuery(${name}, ${value})
-- addFilterQuery(${name}, ${value})
-- addBody(${name}, ${value})
-- addFilterBody(${name}, ${value})
+- addHeader($name, $value)
+- addFilterHeader($name, $value)
+- addQuery($name, $value)
+- addFilterQuery($name, $value)
+- addBody($name, $value)
+- addFilterBody($name, $value)
 
 其中`addFilterXXX`与`addXXX`的区别是`addFilterXXX`仅添加非空参数，而`addXXX`则无此限制
-## 发送请求
-```php
-$request->send(${raw} = false);
-```
-`$raw`参数标识是否返回原文，默认为`false`。当值为`true`时，返回响应的原文，当值为`false`时，返回`Response`类的实例
-
-## 指定方法直接请求
-```php
-$request->get(${raw} = false);
-$request->head(${raw} = false);
-$request->post(${raw} = false);
-$request->put(${raw} = false);
-$request->patch(${raw} = false);
-$request->delete(${raw} = false);
-$request->options(${raw} = false);
-$request->trace(${raw} = false);
-$request->request({$method}, ${raw} = false);
-```
-
-`$raw`含义与`send`方法相同
-
 ## 直接设置消息体
 若消息体格式并非Key-Value格式或其他需要直接设置消息体的情况，可以直接调用
 ```php
-$request->setContent(${data}, ${serializer} = null);
+$request->setContent($data, $serializer = null);
 ```
-其中`$data`可以为`String`，`Array`或`Builder`及其子类的实例，`${serializer}`为字符串或匿名函数。`setContent`的优先级比`setBody`的优先级高，即设置了Content后无论是否设置Body，在发送时均会忽略Body的内容
-
-## 获取响应原文
-```php
-$request->getResponse();
-```
-
-## 使用响应类
-默认情况下，请求后会返回Response类的实例。Response类会对响应进行一些基本的处理，方便用于后续的操作
+其中`$data`可以为`String`，`Array`或`Builder`及其子类的实例，`$serializer`为字符串或匿名函数。`setContent`的优先级比`setBody`的优先级高，即设置了Content后无论是否设置Body，在发送时均会忽略Body的内容
+## 发送请求
 ```php
 $response = $request->send();
+```
+## 响应
+```php
 $response->getRawResponse(); //获取响应原文
 $response->getRawContent(); //获取消息体原文
-$response->getRawHeader(); //获取头部原文
+$response->getRawHeaders(); //获取头部原文
 $response->getBody(); //获取解析后的消息体参数
-$response->getHeader(); //获取解析后的头部
-$response->getCookie(); //获取解析后的Cookie
+$response->getHeaders(); //获取解析后的头部
+$response->getCookies(); //获取解析后的Cookie
 $response->getStatusCode(); //获取状态码
 $response->getContentType(); //获取消息体类型
 $response->getCharset(); //获取字符集
-$response->getError(); //获取错误信息
-$response->getErrorMessage(); //获取错误提示
-$response->getErrorCode(); //获取错误码
-$response->hasError(); //是否有错误
 ```
 `Response`中`request`指向原来的请求对象，若需要使用`Request`中的内容，请使用`$response->request`
 ## 事件
@@ -137,32 +125,60 @@ Request 内置请求前事件（Request::EVENT_BEFORE_REQUEST）和请求后（R
 $request->on(Request::EVENT_BEFORE_REQUEST, function($request){
 
 });
-$request->on(Request::EVENT_AFTER_REQUEST, function($request){
+$request->on(Request::EVENT_AFTER_REQUEST, function($request, $response){
 
 });
 ```
-## 批量发送请求
+## 批量请求
 ```php
 use Verdient\http\BatchRequest;
+
+/**
+ * 传输组件配置
+ * 内置了两种传输组件，分别是：
+ *   cUrl, 基于cUrl的传输组件
+ *   coroutine 基于Swoole的协程的传输组件
+ * 可自行新增或覆盖相应的传输组件
+ */
+$transports = [
+	'cUrl' => 'Verdient\http\transport\CUrlTransport',
+	'coroutine' => 'Verdient\http\transport\CoroutineTransport'
+];
+
+/**
+ * 传输组件，默认为cUrl
+ */
+$transport = 'cUrl';
+
+/**
+ * 批大小，默认为100
+ */
+$batchSize = 100;
+
+$batch = new BatchRequest([
+	'batchSize' => $batchSize,
+	'transports' => $transports,
+	'transport' => $transport,
+]);
 
 /**
  * 请求对象的集合
  * 集合内的元素必须是Verdient\http\Request的实例
  */
 $requests = [];
+
 for($i = 0; $i < 100; $i++){
 	$request = new Request();
-	$request->setUrl('{$url}');
-	$request->addQuery('name', $i);
+	$request->setUrl($url);
+	$request->addQuery('id', $i);
 	$requests[] = $request;
 }
 
-$batch = new BatchRequest($requests);
+$batch->setRequests($requests);
 
 /**
  * 返回内容为数组，keyValue对应关系与构造BatchRequest时传入的数组相同
  * 遍历返回的结果，结果与Request调用send方法后返回的内容一致，使用方法也相同
- * $raw为true时，返回响应原文而非相应的响应类
  */
-$response = $batch->send($raw = false);
+$response = $batch->send();
 ```

@@ -2,42 +2,31 @@
 namespace Verdient\http\builder;
 
 /**
- * Builder
  * 构建器
- * -------
  * @author Verdient。
  */
 abstract class Builder extends \chorus\BaseObject implements BuilderInterface
 {
 	/**
-	 * @var String $charset
-	 * 字符集
-	 * --------------------
+	 * @var string 字符集
 	 * @author Verdient。
 	 */
 	public $charset = null;
 
 	/**
-	 * @var String $contentType
-	 * 消息体类型
-	 * ------------------------
+	 * @var string 消息体类型
 	 * @author Verdient。
 	 */
 	public $contentType = null;
 
 	/**
-	 * @var $_elements
-	 * 元素
-	 * ---------------
+	 * @var array 元素内容
 	 * @author Verdient。
 	 */
 	protected $_elements = [];
 
 	/**
-	 * getElements()
-	 * 获取元素
-	 * -------------
-	 * @return Array
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function getElements(){
@@ -45,12 +34,7 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
 	}
 
 	/**
-	 * setElements(Array $elements)
-	 * 设置元素
-	 * ----------------------------
-	 * @param Array $elements 元素
-	 * --------------------------
-	 * @return Array
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function setElements($elements){
@@ -59,13 +43,7 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
 	}
 
 	/**
-	 * addElement(String $name, Mixed $value)
-	 * 添加元素
-	 * --------------------------------------
-	 * @param String $name 名称
-	 * @param Mixed $value 内容
-	 * ------------------------
-	 * @return FormData
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function addElement($name, $value){
@@ -74,12 +52,7 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
 	}
 
 	/**
-	 * removeElement(String $name)
-	 * 移除元素
-	 * ---------------------------
-	 * @param String $name 名称
-	 * ------------------------
-	 * @return FormData
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function removeElement($name){
@@ -88,10 +61,7 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
 	}
 
 	/**
-	 * headers()
-	 * 附加的头部
-	 * ---------
-	 * @return Array
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function headers(){

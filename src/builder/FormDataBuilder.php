@@ -2,52 +2,38 @@
 namespace Verdient\http\builder;
 
 /**
- * FormDataBuilder
  * 表单构建器
- * ---------------
  * @author Verdient。
  */
 class FormDataBuilder extends Builder
 {
 	/**
-	 * @var String $contentType
-	 * 消息体类型
-	 * ------------------------
 	 * @inheritdoc
-	 * -----------
 	 * @author Verdient。
 	 */
 	public $contentType = 'multipart/form-data';
 
 	/**
-	 * @var const TEXT
-	 * 文本类型
-	 * ---------------
+	 * @var string 文本类型
 	 * @author Verdient。
 	 */
 	const TEXT = 1;
 
 	/**
-	 * @var const FILE
-	 * 文件类型
-	 * ---------------
+	 * @var string 文件类型
 	 * @author Verdient。
 	 */
 	const FILE = 2;
 
 	/**
-	 * @var $_boundary
-	 * 分隔符
-	 * ---------------
+	 * @var string 分隔符
 	 * @author Verdient。
 	 */
 	protected $_boundary;
 
 	/**
-	 * getBoundary()
 	 * 获取分隔符
-	 * -------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function getBoundary(){
@@ -59,12 +45,9 @@ class FormDataBuilder extends Builder
 
 
 	/**
-	 * addTexts(Array $data)
 	 * 批量添加文本
-	 * ---------------------
-	 * @param Array $data 待添加的数据
-	 * -----------------------------
-	 * @return FormData
+	 * @param array $data 待添加的数据
+	 * @return FormDataBuilder
 	 * @author Verdient。
 	 */
 	public function addTexts(Array $data){
@@ -75,12 +58,9 @@ class FormDataBuilder extends Builder
 	}
 
 	/**
-	 * addFiles(Array $data)
 	 * 批量添加文件
-	 * ---------------------
-	 * @param Array $data 待添加的数据
-	 * -----------------------------
-	 * @return FormData
+	 * @param array $data 待添加的数据
+	 * @return FormDataBuilder
 	 * @author Verdient。
 	 */
 	public function addFiles(Array $data){
@@ -91,13 +71,10 @@ class FormDataBuilder extends Builder
 	}
 
 	/**
-	 * addText(String $name, String $value)
 	 * 添加文本
-	 * ------------------------------------
-	 * @param String $name 名称
-	 * @param String $value 内容
-	 * ------------------------
-	 * @return FormData
+	 * @param string $name 名称
+	 * @param string $value 内容
+	 * @return FormDataBuilder
 	 * @author Verdient。
 	 */
 	public function addText($name, $value){
@@ -105,32 +82,14 @@ class FormDataBuilder extends Builder
 	}
 
 	/**
-	 * addFile(String $name, String $path)
 	 * 添加文件
-	 * -----------------------------------
-	 * @param String $name 名称
-	 * @param String $value 内容
-	 * ------------------------
-	 * @return FormData
+	 * @param string $name 名称
+	 * @param string $value 内容
+	 * @return FormDataBuilder
 	 * @author Verdient。
 	 */
 	public function addFile($name, $path){
 		return $this->addElement($name, [static::FILE, $path]);
-	}
-
-	/**
-	 * addElement(String $name, Mixed $value)
-	 * 添加元素
-	 * --------------------------------------
-	 * @param String $name 名称
-	 * @param Mixed $value 内容
-	 * -----------------------
-	 * @return FormData
-	 * @author Verdient。
-	 */
-	public function addElement($name, $value){
-		$this->_elements[$name] = $value;
-		return $this;
 	}
 
 	/**
@@ -148,10 +107,7 @@ class FormDataBuilder extends Builder
 	}
 
 	/**
-	 * toString()
-	 * 转换为字符串
-	 * ----------
-	 * @return String
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function toString(){

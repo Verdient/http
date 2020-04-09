@@ -4,26 +4,20 @@ namespace Verdient\http\component;
 use chorus\StringHelper;
 
 /**
- * Request
  * 请求
- * -------
  * @author Verdient。
  */
 class Request extends \Verdient\http\Request
 {
 	/**
-	 * beforeSend()
 	 * 准备发送前的操作
-	 * -------------
 	 * @author Verdient。
 	 */
 	public function beforeSend(){}
 
 	/**
-	 * responseClass()
 	 * 响应类
-	 * ---------------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public static function responseClass(){
@@ -39,10 +33,7 @@ class Request extends \Verdient\http\Request
 	}
 
 	/**
-	 * prepare()
-	 * 准备
-	 * ---------
-	 * @return Request
+	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function prepare(){

@@ -8,60 +8,44 @@ use SimpleXMLElement;
 use chorus\StringHelper;
 
 /**
- * XmlBuilder
  * XML构建器
- * ----------
  * @author Verdient。
  */
 class XmlBuilder extends Builder
 {
 	/**
-	 * @var String $version
-	 * XML 版本
-	 * --------------------
+	 * @var string XML版本
 	 * @author Verdient。
 	 */
 	public $version = '1.0';
 
 	/**
-	 * @var String $rootTag
-	 * ROOT标签
-	 * --------------------
+	 * @var string ROOT标签
 	 * @author Verdient。
 	 */
 	public $rootTag = 'request';
 
 	/**
-	 * @var String $itemTag
-	 * 项目标签
-	 * --------------------
+	 * @var string 项目标签
 	 * @author Verdient。
 	 */
 	public $itemTag = 'item';
 
 	/**
-	 * @var String $contentType
-	 * 消息体类型
-	 * ------------------------
 	 * @inheritdoc
-	 * -----------
 	 * @author Verdient。
 	 */
 	public $contentType = 'application/xml';
 
 	/**
-	 * @var Boolean useTraversableAsArray
-	 * 是否将可遍历对象当做数组处理
-	 * ----------------------------------
+	 * @var bool 是否将可遍历对象当做数组处理
 	 * @author Verdient。
 	 */
 	public $useTraversableAsArray = true;
 
 	/**
-	 * toString()
 	 * 转为字符串
-	 * ----------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function toString(){
@@ -84,13 +68,10 @@ class XmlBuilder extends Builder
 	}
 
 	/**
-	 * buildXml(DOMElement $element, Mixed $data)
 	 * 构建XML
-	 * ------------------------------------------
 	 * @param DOMElement $element 元素
-	 * @param Mixed $data 数据
-	 * -------------------------------
-	 * @return Array
+	 * @param mixed $data 数据
+	 * @return array
 	 * @author Verdient。
 	 */
 	protected function buildXml($element, $data){

@@ -2,70 +2,53 @@
 namespace Verdient\http\builder;
 
 /**
- * BuilderInterface
  * 构建器接口
- * ----------------
  * @author Verdient。
  */
 interface BuilderInterface
 {
 	/**
-	 * getElements()
 	 * 获取元素
-	 * -------------
-	 * @return Array
+	 * @return array
 	 * @author Verdient。
 	 */
 	public function getElements();
 
 	/**
-	 * setElements(Array $elements)
 	 * 设置元素
-	 * ----------------------------
-	 * @param Array $elements 元素
-	 * --------------------------
-	 * @return Array
+	 * @param array $elements 元素
+	 * @return BuilderInterface
 	 * @author Verdient。
 	 */
 	public function setElements($elements);
 
 	/**
-	 * addElement(String $name, String $value)
 	 * 添加元素
-	 * ---------------------------------------
-	 * @param String $name 名称
-	 * @param String $value 内容
-	 * ------------------------
-	 * @return FormData
+	 * @param string $name 名称
+	 * @param string $value 内容
+	 * @return BuilderInterface
 	 * @author Verdient。
 	 */
 	public function addElement($name, $value);
 
 	/**
-	 * removeElement(String $name)
 	 * 移除元素
-	 * ---------------------------
-	 * @param String $name 名称
-	 * ------------------------
-	 * @return FormData
+	 * @param string $name 名称
+	 * @return BuilderInterface
 	 * @author Verdient。
 	 */
 	public function removeElement($name);
 
 	/**
-	 * toString()
 	 * 转为字符串
-	 * ----------
-	 * @return String
+	 * @return string
 	 * @author Verdient。
 	 */
 	public function toString();
 
 	/**
-	 * headers()
 	 * 附加的头部
-	 * ---------
-	 * @return Array
+	 * @return array
 	 * @author Verdient。
 	 */
 	public function headers();
