@@ -507,9 +507,12 @@ class Request extends \chorus\BaseObject
 				throw new InvalidParamException('Url is not a valid url');
 			}
 		}
-		$query = isset($url['query']) ? ('?' . $url['query']) : '';
+		$query = [];
+		if(isset($url['query'])){
+			parse_str($url['query'], $query);
+		}
 		if(!empty($this->_query)){
-			$query .= ($query ? '&' : '?') . http_build_query($this->_query);
+			$query = array_merge($query, $this->_query);
 		}
 		$url = $url['scheme'] . '://' .
 			(isset($url['user']) ? $url['user'] : '') .
@@ -518,7 +521,7 @@ class Request extends \chorus\BaseObject
 			$url['host'] .
 			(isset($url['port']) ? ':' . $url['port'] : '') .
 			(isset($url['path']) ? $url['path'] : '') .
-			$query .
+			(!empty($query) ? ('?' . http_build_query($query)) : '') .
 			(isset($url['fragment']) ? ('#' . $url['fragment']) : '');
 		return $url;
 	}
