@@ -41,7 +41,8 @@ class Request extends \chorus\BaseObject
 	 */
 	const BUILT_IN_TRANSPORTS = [
 		'cUrl' => 'Verdient\http\transport\CUrlTransport',
-		'coroutine' => 'Verdient\http\transport\CoroutineTransport'
+		'coroutine' => 'Verdient\http\transport\CoroutineTransport',
+		'stream' => 'Verdient\http\transport\StreamTransport'
 	];
 
 	/**

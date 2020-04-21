@@ -17,7 +17,8 @@ class BatchRequest extends \chorus\BaseObject
 	 */
 	const BUILT_IN_TRANSPORTS = [
 		'cUrl' => 'Verdient\http\transport\CUrlTransport',
-		'coroutine' => 'Verdient\http\transport\CoroutineTransport'
+		'coroutine' => 'Verdient\http\transport\CoroutineTransport',
+		'stream' => 'Verdient\http\transport\StreamTransport'
 	];
 
 	/**
@@ -103,6 +104,7 @@ class BatchRequest extends \chorus\BaseObject
 		foreach($this->requests as $requests){
 			foreach($requests as $request){
 				$request->trigger(Request::EVENT_BEFORE_REQUEST, $request);
+				$request->prepare();
 			}
 			foreach($this->getTransport()->batchSend($requests) as $key => $result){
 				list($statusCode, $headers, $content, $response) = $result;

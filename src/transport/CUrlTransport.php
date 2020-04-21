@@ -29,8 +29,7 @@ class CUrlTransport extends Transport
 	 * @return array
 	 * @author Verdient。
 	 */
-	protected function prepare($request){
-		$request->prepare();
+	protected function prepare(Request $request){
 		$options = static::DEFAULT_OPTIONS;
 		$options[CURLOPT_URL] = $request->getUrl();
 		$method = strtoupper($request->getMethod());
@@ -83,12 +82,14 @@ class CUrlTransport extends Transport
 			curl_close($curl);
 			throw new \Exception($error);
 		}
-		$statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 		$headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
 		$headers = mb_substr($response, 0, $headerSize - 4);
 		$content = mb_substr($response, $headerSize);
+		$headers = explode("\r\n", $headers);
+		$status = array_shift($headers);
+		$headers = implode("\r\n", $headers);
 		curl_close($curl);
-		return [$statusCode, $headers, $content, $response];
+		return [$status, $headers, $content, $response];
 	}
 
 	/**
@@ -122,11 +123,13 @@ class CUrlTransport extends Transport
 		foreach($resources as $key => $resource){
 			$response = curl_multi_getcontent($resource);
 			curl_multi_remove_handle($mh, $resource);
-			$statusCode = curl_getinfo($resource, CURLINFO_HTTP_CODE);
 			$headerSize = curl_getinfo($resource, CURLINFO_HEADER_SIZE);
 			$headers = mb_substr($response, 0, $headerSize - 4);
 			$content = mb_substr($response, $headerSize);
-			$responses[$key] = [$statusCode, $headers, $content, $response];
+			$headers = explode("\r\n", $headers);
+			$status = array_shift($headers);
+			$headers = implode("\r\n", $headers);
+			$responses[$key] = [$status, $headers, $content, $response];
 		}
 		curl_multi_close($mh);
 		return $responses;

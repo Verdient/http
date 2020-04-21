@@ -36,11 +36,13 @@ $parsers = [
  * 内置了两种传输组件，分别是：
  *   cUrl, 基于cUrl的传输组件
  *   coroutine 基于Swoole的协程的传输组件
+ *   stream 基于Streams的传输组件
  * 可自行新增或覆盖相应的传输组件
  */
 $transports = [
 	'cUrl' => 'Verdient\http\transport\CUrlTransport',
-	'coroutine' => 'Verdient\http\transport\CoroutineTransport'
+	'coroutine' => 'Verdient\http\transport\CoroutineTransport',
+	'stream' => 'Verdient\http\transport\StreamTransport'
 ];
 
 /**
@@ -115,6 +117,8 @@ $response->getCookies(); //获取解析后的Cookie
 $response->getStatusCode(); //获取状态码
 $response->getContentType(); //获取消息体类型
 $response->getCharset(); //获取字符集
+$response->getStatusMessage(); //获取状态消息
+$response->getHttpVersion(); //获取HTTP版本
 ```
 `Response`中`request`指向原来的请求对象，若需要使用`Request`中的内容，请使用`$response->request`
 ## 事件
@@ -142,7 +146,8 @@ use Verdient\http\BatchRequest;
  */
 $transports = [
 	'cUrl' => 'Verdient\http\transport\CUrlTransport',
-	'coroutine' => 'Verdient\http\transport\CoroutineTransport'
+	'coroutine' => 'Verdient\http\transport\CoroutineTransport',
+	'stream' => 'Verdient\http\transport\StreamTransport'
 ];
 
 /**

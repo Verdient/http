@@ -45,6 +45,18 @@ class Response extends \chorus\BaseObject
 	public $_statusCode = null;
 
 	/**
+	 * @var string 状态消息
+	 * @author Verdient。
+	 */
+	public $_statusMessage = null;
+
+	/**
+	 * @var string HTTP版本
+	 * @author Verdient。
+	 */
+	public $_httpVersion = null;
+
+	/**
 	 * @var string 原始响应
 	 * @author Verdient。
 	 */
@@ -90,20 +102,12 @@ class Response extends \chorus\BaseObject
 	 * @inheritdoc
 	 * @author Verdient。
 	 */
-	public function __construct($config = [], $statusCode, $headers, $content, $response){
+	public function __construct($config = [], $status, $headers, $content, $response){
 		parent::__construct($config);
 		$this->parsers = array_merge(static::BUILT_IN_PARSERS, $this->parsers);
-		$this->_statusCode = $statusCode;
-		if(is_array($headers)){
-			$this->_headers = $headers;
-		}else{
-			$this->_rawHeaders = $headers;
-		}
-		if(is_array($content)){
-			$this->_body = $content;
-		}else{
-			$this->_rawContent = $content;
-		}
+		list($this->_httpVersion, $this->_statusCode, $this->_statusMessage) = explode(' ', $status);
+		$this->_rawHeaders = $headers;
+		$this->_rawContent = $content;
 		$this->_rawReponse = $response;
 	}
 
@@ -317,5 +321,23 @@ class Response extends \chorus\BaseObject
 	 */
 	public function getStatusCode(){
 		return $this->_statusCode;
+	}
+
+	/**
+	 * 获取状态消息
+	 * @return int
+	 * @author Verdient。
+	 */
+	public function getStatusMessage(){
+		return $this->_statusMessage;
+	}
+
+	/**
+	 * 获取HTTP版本
+	 * @return int
+	 * @author Verdient。
+	 */
+	public function getHttpVersion(){
+		return $this->_httpVersion;
 	}
 }

@@ -16,7 +16,6 @@ class CoroutineTransport extends Transport
 	 * @author Verdient。
 	 */
 	protected function prepare(Request $request){
-		$request->prepare();
 		$options = [];
 		$url = parse_url($request->getUrl());
 		$options['https'] = $url['scheme'] === 'https';
@@ -38,18 +37,71 @@ class CoroutineTransport extends Transport
 	}
 
 	/**
+	 * 获取状态信息
+	 * @param int $code 状态码
+	 * @return string
+	 * @author Verdient。
+	 */
+	protected function getStatusMessage($code){
+		$map = [
+			100 => "Continue",
+			101 => "Switching Protocols",
+			200 => "OK",
+			201 => "Created",
+			202 => "Accepted",
+			203 => "Non-Authoritative Information",
+			204 => "No Content",
+			205 => "Reset Content",
+			206 => "Partial Content",
+			300 => "Multiple Choices",
+			301 => "Moved Permanently",
+			302 => "Found",
+			303 => "See Other",
+			304 => "Not Modified",
+			305 => "Use Proxy",
+			306 => "(Unused)",
+			307 => "Temporary Redirect",
+			400 => "Bad Request",
+			401 => "Unauthorized",
+			402 => "Payment Required",
+			403 => "Forbidden",
+			404 => "Not Found",
+			405 => "Method Not Allowed",
+			406 => "Not Acceptable",
+			407 => "Proxy Authentication Required",
+			408 => "Request Timeout",
+			409 => "Conflict",
+			410 => "Gone",
+			411 => "Length Required",
+			412 => "Precondition Failed",
+			413 => "Request Entity Too Large",
+			414 => "Request-URI Too Long",
+			415 => "Unsupported Media Type",
+			416 => "Requested Range Not Satisfiable",
+			417 => "Expectation Failed",
+			500 => "Internal Server Error",
+			501 => "Not Implemented",
+			502 => "Bad Gateway",
+			503 => "Service Unavailable",
+			504 => "Gateway Timeout",
+			505 => "HTTP Version Not Supported"
+		];
+		return isset($map[$code]) ? $map[$code] : '';
+	}
+
+	/**
 	 * @inheritdoc
 	 * @author Verdient。
 	 */
 	public function send(Request $request){
-		$statusCode = 0;
+		$status = '';
 		$headers = [];
 		$content = null;
 		$response = null;
-		\Swoole\Coroutine\run(function() use ($request, &$statusCode, &$headers, &$content, &$response){
-			list($statusCode, $headers, $content, $response) = $this->request($this->prepare($request));
+		\Swoole\Coroutine\run(function() use ($request, &$status, &$headers, &$content, &$response){
+			list($status, $headers, $content, $response) = $this->request($this->prepare($request));
 		});
-		return [$statusCode, $headers, $content, $response];
+		return [$status, $headers, $content, $response];
 	}
 
 	/**
@@ -61,8 +113,8 @@ class CoroutineTransport extends Transport
 		\Swoole\Coroutine\run(function() use ($requests, &$responses){
 			foreach($requests as $key => $request){
 				\Swoole\Coroutine::create(function () use ($request, $key, &$responses){
-					list($statusCode, $headers, $content, $response) = $this->request($this->prepare($request));
-					$responses[$key] = [$statusCode, $headers, $content, $response];
+					list($status, $headers, $content, $response) = $this->request($this->prepare($request));
+					$responses[$key] = [$status, $headers, $content, $response];
 				});
 			}
 		});
@@ -105,8 +157,10 @@ class CoroutineTransport extends Transport
 			}
 		}
 		$headers = implode("\r\n", $headers);
-		$content = $client->body;
+		$content = $client->getBody();
 		$client->close();
-		return [$statusCode, $headers, $content, $headers . "\r\n\r\n" . $content];
+		$status = 'HTTP/1.1 ' . $statusCode . ' ' . $this->getStatusMessage($statusCode);
+		$response = $status . "\r\n" . $headers . "\r\n\r\n" . $content;
+		return [$status, $headers, $content, $response];
 	}
 }
