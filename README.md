@@ -33,7 +33,7 @@ $parsers = [
 
 /**
  * 传输组件配置
- * 内置了两种传输组件，分别是：
+ * 内置了三种传输组件，分别是：
  *   cUrl, 基于cUrl的传输组件
  *   coroutine 基于Swoole的协程的传输组件
  *   stream 基于Streams的传输组件
@@ -139,9 +139,10 @@ use Verdient\http\BatchRequest;
 
 /**
  * 传输组件配置
- * 内置了两种传输组件，分别是：
+ * 内置了三种传输组件，分别是：
  *   cUrl, 基于cUrl的传输组件
  *   coroutine 基于Swoole的协程的传输组件
+ *   stream 基于Streams的传输组件
  * 可自行新增或覆盖相应的传输组件
  */
 $transports = [
