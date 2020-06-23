@@ -42,19 +42,19 @@ class Response extends \chorus\BaseObject
 	 * @var int 状态码
 	 * @author Verdient。
 	 */
-	public $_statusCode = null;
+	protected $_statusCode = null;
 
 	/**
 	 * @var string 状态消息
 	 * @author Verdient。
 	 */
-	public $_statusMessage = null;
+	protected $_statusMessage = null;
 
 	/**
 	 * @var string HTTP版本
 	 * @author Verdient。
 	 */
-	public $_httpVersion = null;
+	protected $_httpVersion = null;
 
 	/**
 	 * @var string 原始响应
@@ -105,7 +105,10 @@ class Response extends \chorus\BaseObject
 	public function __construct($config = [], $status, $headers, $content, $response){
 		parent::__construct($config);
 		$this->parsers = array_merge(static::BUILT_IN_PARSERS, $this->parsers);
-		list($this->_httpVersion, $this->_statusCode, $this->_statusMessage) = explode(' ', $status);
+		$status = explode(' ', $status);
+		if(count($status) === 3){
+			list($this->_httpVersion, $this->_statusCode, $this->_statusMessage) = $status;
+		}
 		$this->_rawHeaders = $headers;
 		$this->_rawContent = $content;
 		$this->_rawReponse = $response;

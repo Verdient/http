@@ -361,7 +361,6 @@ class Request extends \chorus\BaseObject
 
 	/**
 	 * 获取消息体
-	 * ------------
 	 * @return string
 	 * @author Verdient。
 	 */
