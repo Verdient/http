@@ -10,6 +10,12 @@ use chorus\StringHelper;
 class Request extends \Verdient\http\Request
 {
 	/**
+	 * @var Component|null 组件
+	 * @author Verdient。
+	 */
+	public $component = null;
+
+	/**
 	 * 准备发送前的操作
 	 * @author Verdient。
 	 */

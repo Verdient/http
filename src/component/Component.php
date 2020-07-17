@@ -35,7 +35,7 @@ class Component extends \chorus\BaseObject
 	public $routePrefix = null;
 
 	/**
-	 * @var string 路由集合
+	 * @var array 路由集合
 	 * @author Verdient。
 	 */
 	public $routes = [];
@@ -119,6 +119,7 @@ class Component extends \chorus\BaseObject
 		$request = ObjectHelper::create(static::requestClass());
 		$request->setUrl($this->getUrl($name));
 		$request->setMethod($method);
+		$request->component = $this;
 		return $request;
 	}
 }
