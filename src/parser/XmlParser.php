@@ -30,8 +30,13 @@ class XmlParser extends ResponseParser
 	 */
 	public function parse($response){
 		$dom = new \DOMDocument('1.0', $this->charset);
-		@$dom->loadXML($response, $this->options);
-		return $this->convertXmlToArray(@simplexml_import_dom($dom->documentElement));
+		set_error_handler(function(){});
+		$dom->loadXML($response, $this->options);
+		restore_error_handler();
+		if($dom->documentElement){
+			return $this->convertXmlToArray(simplexml_import_dom($dom->documentElement));
+		}
+		return null;
 	}
 
 	/**

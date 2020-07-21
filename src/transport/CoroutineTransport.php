@@ -173,11 +173,11 @@ class CoroutineTransport extends Transport
 				$headers[] = ucwords($name, '-') . ': ' . $value;
 			}
 		}
-		$headers = implode('\r\n', $headers);
+		$headers = implode("\r\n", $headers);
 		$content = $client->getBody();
 		$client->close();
 		$status = 'HTTP/1.1 ' . $statusCode . ' ' . $this->getStatusMessage($statusCode);
-		$response = $status . '\r\n' . $headers . '\r\n\r\n' . $content;
+		$response = $status . "\r\n" . $headers . "\r\n\r\n" . $content;
 		return [$status, $headers, $content, $response];
 	}
 }
