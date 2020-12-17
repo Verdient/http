@@ -106,8 +106,10 @@ class Response extends \chorus\BaseObject
 		parent::__construct($config);
 		$this->parsers = array_merge(static::BUILT_IN_PARSERS, $this->parsers);
 		$status = explode(' ', $status);
-		if(count($status) === 3){
-			list($this->_httpVersion, $this->_statusCode, $this->_statusMessage) = $status;
+		if(count($status) > 2){
+			$this->_httpVersion = array_shift($status);
+			$this->_statusCode = (int) array_shift($status);
+			$this->_statusMessage = implode(' ', $status);
 		}
 		$this->_rawHeaders = $headers;
 		$this->_rawContent = $content;
