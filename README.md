@@ -85,6 +85,7 @@ $request->setHeaders([$name => $value, ...]); //设置请求头部
 $request->setQuery([$name => $value, ...]); //设置查询参数
 $request->setBody([$name => $value, ...]); //设置消息体参数
 $request->setProxy($address, $port=null); //设置代理
+$request->setTimeout($timeout); //设置超时时间
 ```
 ## 添加参数
 `Header`, `Query`, `Body`均支持添加参数，相应方法为：
