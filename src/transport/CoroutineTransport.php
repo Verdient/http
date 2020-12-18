@@ -34,8 +34,15 @@ class CoroutineTransport extends Transport
 		$options['headers'] = $request->getHeaders();
 		$options['content'] = $request->getContent();
 		$options['method'] = $request->getMethod();
+		$options['timeout'] = $request->getTimeout();
 		$options['host'] = $url['host'];
 		$options['headers']['Host'] = $url['host'];
+		if($request->getProxyHost()){
+			$options['proxyHost'] = $request->getProxyHost();
+		}
+		if($request->getProxyPort()){
+			$options['proxyPort'] = $request->getProxyPort();
+		}
 		return $options;
 	}
 
@@ -157,6 +164,13 @@ class CoroutineTransport extends Transport
 		$client->setHeaders($options['headers']);
 		$client->setData($options['content']);
 		$client->setMethod($options['method']);
+		$sets = [];
+		foreach(['proxyHost' => 'http_proxy_host', 'proxyPort' => 'http_proxy_port', 'timeout' => 'timeout'] as $option => $config){
+			if(isset($options[$option])){
+				$sets[$config] = $options[$option];
+			}
+		}
+		$client->set($sets);
 		$client->execute($options['path']);
 		if($client->errCode !== 0){
 			throw new \Exception(socket_strerror($client->errCode));

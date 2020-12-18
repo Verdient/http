@@ -14,8 +14,6 @@ class CUrlTransport extends Transport
 	 * @author Verdient。
 	 */
 	const DEFAULT_OPTIONS = [
-		CURLOPT_TIMEOUT => 30,
-		CURLOPT_CONNECTTIMEOUT => 30,
 		CURLOPT_RETURNTRANSFER => true,
 		CURLOPT_HEADER => true,
 		CURLOPT_SSL_VERIFYPEER => false,
@@ -65,6 +63,8 @@ class CUrlTransport extends Transport
 		if($request->getProxyPort()){
 			$options[CURLOPT_PROXYPORT] = $request->getProxyPort();
 		}
+		$options[CURLOPT_TIMEOUT] = $request->getTimeout();
+		$options[CURLOPT_CONNECTTIMEOUT] = $request->getTimeout();
 		return $options;
 	}
 

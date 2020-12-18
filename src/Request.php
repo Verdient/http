@@ -136,6 +136,12 @@ class Request extends \chorus\BaseObject
 	protected $_proxyPort = null;
 
 	/**
+	 * @var int 超时时间
+	 * @author Verdient。
+	 */
+	protected $_timeout = 15;
+
+	/**
 	 * @inheritdoc
 	 * @author Verdient。
 	 */
@@ -428,6 +434,26 @@ class Request extends \chorus\BaseObject
 	 */
 	public function setMethod($method){
 		$this->_method = strtoupper($method);
+		return $this;
+	}
+
+	/**
+	 * 获取超时时间
+	 * @return int
+	 * @author Verdient。
+	 */
+	public function getTimeout(){
+		return $this->_timeout;
+	}
+
+	/**
+	 * 设置超时时间
+	 * @param string $timeout 超时时间
+	 * @return Request
+	 * @author Verdient。
+	 */
+	public function setTimeout($timeout){
+		$this->_timeout = $timeout;
 		return $this;
 	}
 

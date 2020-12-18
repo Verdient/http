@@ -45,6 +45,13 @@ class StreamTransport extends Transport
 			$options['http']['header'] = $headers;
 		}
 		$options['http']['content'] = $request->getContent();
+		$options['http']['timeout'] = $request->getTimeout();
+		if($request->getProxyHost()){
+			$options['http']['proxy'] = 'tcp://' . $request->getProxyHost();
+		}
+		if($request->getProxyPort()){
+			$options['http']['proxy'] .= ':' . $request->getProxyPort();
+		}
 		return $options;
 	}
 
