@@ -515,6 +515,7 @@ class Request extends \chorus\BaseObject
 			if(empty($this->_content) && !empty($this->_body)){
 				$this->_content = $this->normalizeContent($this->_body, $this->bodySerializer);
 			}
+			$this->addHeader('Content-Length', strlen($this->_content));
 		}
 		return $this;
 	}

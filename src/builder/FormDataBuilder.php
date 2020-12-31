@@ -143,7 +143,7 @@ class FormDataBuilder extends Builder
 			}
 			$type = mime_content_type($value);
 			$body_part = "Content-Disposition: form-data; name=\"$key\"; filename=\"{$value}\"\r\n";
-			$body_part .= "Content-type: {$type}\r\n";
+			$body_part .= "Content-Type: {$type}\r\n";
 			$body_part .= "\r\n" . file_get_contents($value);
 			$body[] = $body_part;
 		}
