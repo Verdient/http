@@ -14,6 +14,8 @@ use Verdient\http\component\Response;
  */
 abstract class AbstractResponse
 {
+    use RuleTrait;
+
     /**
      * @var bool 请求是否成功
      * @author Verdient。
@@ -39,12 +41,6 @@ abstract class AbstractResponse
     protected $response = null;
 
     /**
-     * @var array 属性配置
-     * @author Verdient。
-     */
-    protected $attributes = [];
-
-    /**
      * @var array 数据
      * @author Verdient。
      */
@@ -62,9 +58,7 @@ abstract class AbstractResponse
         if($this->isOK){
             $data = $result->data;
             if(!empty($this->attributes)){
-                foreach($this->attributes as $name => $type){
-                    $this->data[$name] = isset($data[$name]) ? Formatter::format($type, $data[$name]) : null;
-                }
+                $this->data = $this->format($data);
             }else{
                 $this->data = $data;
             }
@@ -81,6 +75,15 @@ abstract class AbstractResponse
      * @author Verdient。
      */
     abstract public function normailze(Response $response): Result;
+
+    /**
+     * 获取响应对象
+     * @return Response
+     * @author Verdient。
+     */
+    public function getResponse(){
+        return $this->response;
+    }
 
     /**
      * 获取是否成功

@@ -37,12 +37,6 @@ class Formatter
     const STRING = 'string';
 
    /**
-     * @var string 数组
-     * @author Verdient。
-     */
-    const ARRAY = 'array';
-
-   /**
      * @var string 布尔
      * @author Verdient。
      */
@@ -53,6 +47,12 @@ class Formatter
      * @author Verdient。
      */
     const ANY = 'any';
+
+   /**
+     * @var string 以整型表示布尔
+     * @author Verdient。
+     */
+    const BOOLEAN_AS_INT = 'booleanAsInt';
 
     /**
      * 格式化
@@ -72,13 +72,16 @@ class Formatter
                 $value = (double) $value;
                 break;
             case static::STRING:
+                if(is_array($value)){
+                    return json_encode($value);
+                }
                 $value = (string) $value;
-                break;
-            case static::ARRAY:
-                $value = (array) $value;
                 break;
             case static::BOOLEAN:
                 $value = (bool) $value;
+                break;
+            case static::BOOLEAN_AS_INT:
+                $value = $value ? 1 : 0;
                 break;
             case static::ANY:
                 break;
