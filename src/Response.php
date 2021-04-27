@@ -201,16 +201,18 @@ class Response extends BaseObject
                     }
                 }
                 if(!$parsed && $this->tryParse === true){
-                    foreach(array_keys($this->parsers) as $name){
-                        $parser = $this->getParser($name);
-                        if($parser->can($content)){
-                            try{
-                                $body = $parser->parse($content);
-                                if($body){
-                                    $this->body = $parser->parse($content);
-                                    break;
-                                }
-                            }catch(\Throwable $e){}
+                    foreach([$this->parsers, static::BUILT_IN_PARSERS] as $parsers){
+                        foreach(array_keys($parsers) as $name){
+                            $parser = $this->getParser($name);
+                            if($parser->can($content)){
+                                try{
+                                    $body = $parser->parse($content);
+                                    if($body){
+                                        $this->body = $parser->parse($content);
+                                        break;
+                                    }
+                                }catch(\Throwable $e){}
+                            }
                         }
                     }
                 }
