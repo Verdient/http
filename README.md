@@ -12,9 +12,9 @@ use Verdient\http\Request;
  * 可自行新增或覆盖相应的构建器
  */
 $builders = [
-	'json' => 'Verdient\http\builder\JsonBuilder',
-	'urlencoded' => 'Verdient\http\builder\UrlencodedBuilder',
-	'xml' => 'Verdient\http\builder\XmlBuilder'
+    'json' => 'Verdient\http\builder\JsonBuilder',
+    'urlencoded' => 'Verdient\http\builder\UrlencodedBuilder',
+    'xml' => 'Verdient\http\builder\XmlBuilder'
 ];
 
 /**
@@ -26,9 +26,9 @@ $builders = [
  * 可自行新增或覆盖相应的解析器
  */
 $parsers = [
-	'application/json' => 'Verdient\http\parser\JsonParser',
-	'application/x-www-form-urlencoded' => 'Verdient\http\parser\UrlencodedParser',
-	'application/xml' => 'Verdient\http\parser\XmlParser',
+    'application/json' => 'Verdient\http\parser\JsonParser',
+    'application/x-www-form-urlencoded' => 'Verdient\http\parser\UrlencodedParser',
+    'application/xml' => 'Verdient\http\parser\XmlParser',
 ];
 
 /**
@@ -40,9 +40,9 @@ $parsers = [
  * 可自行新增或覆盖相应的传输组件
  */
 $transports = [
-	'cUrl' => 'Verdient\http\transport\CUrlTransport',
-	'coroutine' => 'Verdient\http\transport\CoroutineTransport',
-	'stream' => 'Verdient\http\transport\StreamTransport'
+    'cUrl' => 'Verdient\http\transport\CUrlTransport',
+    'coroutine' => 'Verdient\http\transport\CoroutineTransport',
+    'stream' => 'Verdient\http\transport\StreamTransport'
 ];
 
 /**
@@ -69,12 +69,12 @@ $bodySerializer = 'json';
 $tryParse = true;
 
 $request = new Request([
-	'builders' => $builders,
-	'parsers' => $parsers,
-	'transports' => $transports,
-	'transport' => $transport,
-	'bodySerializer' => $bodySerializer,
-	'tryParse' => $tryParse
+    'builders' => $builders,
+    'parsers' => $parsers,
+    'transports' => $transports,
+    'transport' => $transport,
+    'bodySerializer' => $bodySerializer,
+    'tryParse' => $tryParse
 ]);
 ```
 ## 设置请求参数
@@ -102,7 +102,7 @@ $request->setTimeout($timeout); //设置超时时间
 ```php
 $request->setContent($data, $serializer = null);
 ```
-其中`$data`可以为`String`，`Array`或`Builder`及其子类的实例，`$serializer`为字符串或匿名函数。`setContent`的优先级比`setBody`的优先级高，即设置了Content后无论是否设置Body，在发送时均会忽略Body的内容
+其中`$data`可以为`string`，`array`或`Builder`及其子类的实例，`$serializer`为字符串或匿名函数。`setContent`的优先级比`setBody`的优先级高，即设置了Content后无论是否设置Body，在发送时均会忽略Body的内容
 ## 发送请求
 ```php
 $response = $request->send();
@@ -123,10 +123,21 @@ $response->getHttpVersion(); //获取HTTP版本
 ```
 `Response`中`request`指向原来的请求对象，若需要使用`Request`中的内容，请使用`$response->request`
 ## 事件
-Request 内置请求前事件（Request::EVENT_BEFORE_REQUEST）和请求后（Request::EVENT_AFTER_REQUEST）事件，可使用on函数挂载事件
+Request 内置事件
+- `Request::EVENT_BEFORE_PREPARE` 准备前触发
+- `Request::EVENT_BEFORE_REQUEST` 请求前触发
+- `Request::EVENT_AFTER_REQUEST` 请求后触发
 
-事件触发时会将当前Request对象以参数的形式传递给相应处理函数
+准备前`Request::EVENT_BEFORE_PREPARE`和请求前`Request::EVENT_BEFORE_REQUEST`的区别是中间经历了一个名为`prepare`的过程
+
+准备过程主要做了两件事
+1. 将URL中的查询参数(Query)和通过setQuery(), addQuery(), AddFilterQuery()等方法设置的查询参数合并，并将修改覆盖到URL上
+2. 如果未通过setContent()直接设置过消息体内容并且有通过setBody(), addBody(), addFilterBody()设置过key-value形式的参数，则根据bodySerializer的设置将body序列化为字符串，并设置为content
+
 ```php
+$request->on(Request::EVENT_BEFORE_PREPARE, function($request){
+
+});
 $request->on(Request::EVENT_BEFORE_REQUEST, function($request){
 
 });
@@ -147,9 +158,9 @@ use Verdient\http\BatchRequest;
  * 可自行新增或覆盖相应的传输组件
  */
 $transports = [
-	'cUrl' => 'Verdient\http\transport\CUrlTransport',
-	'coroutine' => 'Verdient\http\transport\CoroutineTransport',
-	'stream' => 'Verdient\http\transport\StreamTransport'
+    'cUrl' => 'Verdient\http\transport\CUrlTransport',
+    'coroutine' => 'Verdient\http\transport\CoroutineTransport',
+    'stream' => 'Verdient\http\transport\StreamTransport'
 ];
 
 /**
@@ -163,9 +174,9 @@ $transport = 'cUrl';
 $batchSize = 100;
 
 $batch = new BatchRequest([
-	'batchSize' => $batchSize,
-	'transports' => $transports,
-	'transport' => $transport,
+    'batchSize' => $batchSize,
+    'transports' => $transports,
+    'transport' => $transport,
 ]);
 
 /**
@@ -175,10 +186,10 @@ $batch = new BatchRequest([
 $requests = [];
 
 for($i = 0; $i < 100; $i++){
-	$request = new Request();
-	$request->setUrl($url);
-	$request->addQuery('id', $i);
-	$requests[] = $request;
+    $request = new Request();
+    $request->setUrl($url);
+    $request->addQuery('id', $i);
+    $requests[] = $request;
 }
 
 $batch->setRequests($requests);

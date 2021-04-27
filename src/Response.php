@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Verdient\http;
 
+use chorus\BaseObject;
 use chorus\ObjectHelper;
 use Verdient\http\parser\ResponseParserInterface;
 
@@ -11,7 +12,7 @@ use Verdient\http\parser\ResponseParserInterface;
  * 响应
  * @author Verdient。
  */
-class Response extends \chorus\BaseObject
+class Response extends BaseObject
 {
     /**
      * @var array 内建解析器
@@ -127,17 +128,19 @@ class Response extends \chorus\BaseObject
      */
     protected function getParser($name, $charset = null)
     {
-        foreach([$this->parsers, static::BUILT_IN_PARSERS] as $parsers){
-            $parser = $parsers[strtolower($name)] ?? null;
-            if($parser){
-                $parser = ObjectHelper::create($parser);
-                if(!$parser instanceof ResponseParserInterface){
-                    throw new \Exception('parser must implements ' . ResponseParserInterface::class);
+        if($name){
+            foreach([$this->parsers, static::BUILT_IN_PARSERS] as $parsers){
+                $parser = $parsers[strtolower($name)] ?? null;
+                if($parser){
+                    $parser = ObjectHelper::create($parser);
+                    if(!$parser instanceof ResponseParserInterface){
+                        throw new \Exception('parser must implements ' . ResponseParserInterface::class);
+                    }
+                    if(!empty($charset)){
+                        $parser->charset = $charset;
+                    }
+                    return $parser;
                 }
-                if(!empty($charset)){
-                    $parser->charset = $charset;
-                }
-                return $parser;
             }
         }
         return false;
