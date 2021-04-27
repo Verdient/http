@@ -132,7 +132,7 @@ Request 内置事件
 
 准备过程主要做了两件事
 1. 将URL中的查询参数(Query)和通过setQuery(), addQuery(), AddFilterQuery()等方法设置的查询参数合并，并将修改覆盖到URL上
-2. 如果未通过setContent()直接设置过消息体内容并且有通过setBody(), addBody(), addFilterBody()设置过key-value形式的参数，则根据bodySerializer的设置将body序列化为字符串，并设置为content
+2. 如果未通过setContent()直接设置过消息体内容并且有通过setBody(), addBody(), addFilterBody()设置过key-value形式的参数，则根据bodySerializer的设置将body序列化为字符串，并设置content
 
 ```php
 $request->on(Request::EVENT_BEFORE_PREPARE, function($request){
