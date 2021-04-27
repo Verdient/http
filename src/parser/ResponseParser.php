@@ -7,9 +7,9 @@ namespace Verdient\http\parser;
  */
 abstract class ResponseParser extends \chorus\BaseObject implements ResponseParserInterface
 {
-	/**
-	 * 字符集
-	 * @author Verdient。
-	 */
-	public $charset = null;
+    /**
+     * 字符集
+     * @author Verdient。
+     */
+    public $charset = null;
 }

@@ -7,19 +7,19 @@ namespace Verdient\http\parser;
  */
 interface ResponseParserInterface
 {
-	/**
-	 * 是否可以解析
-	 * @param string $response 响应内容
-	 * @return bool
-	 * @author Verdient。
-	 */
-	public function can($response);
+    /**
+     * 是否可以解析
+     * @param string $response 响应内容
+     * @return bool
+     * @author Verdient。
+     */
+    public function can($response);
 
-	/**
-	 * 解析
-	 * @param string $response 响应内容
-	 * @return array|bool
-	 * @author Verdient。
-	 */
-	public function parse($response);
+    /**
+     * 解析
+     * @param string $response 响应内容
+     * @return array|bool
+     * @author Verdient。
+     */
+    public function parse($response);
 }

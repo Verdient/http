@@ -7,17 +7,18 @@ namespace Verdient\http\builder;
  */
 class JsonBuilder extends Builder
 {
-	/**
-	 * @inheritdoc
-	 * @author Verdient。
-	 */
-	public $contentType = 'application/json';
+    /**
+     * @inheritdoc
+     * @author Verdient。
+     */
+    public $contentType = 'application/json';
 
-	/**
-	 * @inheritdoc
-	 * @author Verdient。
-	 */
-	public function toString(){
-		return json_encode($this->getElements());
-	}
+    /**
+     * @inheritdoc
+     * @author Verdient。
+     */
+    public function toString()
+    {
+        return json_encode($this->getElements());
+    }
 }
