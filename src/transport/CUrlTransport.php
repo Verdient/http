@@ -86,11 +86,17 @@ class CUrlTransport extends AbstractTransport
             throw new \Exception($error);
         }
         $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
-        $headers = mb_substr($response, 0, $headerSize - 4);
         $content = mb_substr($response, $headerSize);
-        $headers = explode("\r\n", $headers);
-        $status = array_shift($headers);
-        $headers = implode("\r\n", $headers);
+        $headers = mb_substr($response, 0, $headerSize - 4);
+        $status = '';
+        $position = strrpos($headers, "\r\n\r\n");
+        if($position !== false){
+            $status = mb_substr($headers, 0, $position + 4);
+            $headers = mb_substr($headers, $position + 4);
+        }
+        $position = strpos($headers, "\r\n");
+        $status .= mb_substr($headers, 0, $position);
+        $headers = mb_substr($headers, $position + 2);
         curl_close($curl);
         return [$status, $headers, $content, $response];
     }
@@ -127,11 +133,17 @@ class CUrlTransport extends AbstractTransport
             $response = curl_multi_getcontent($resource);
             curl_multi_remove_handle($mh, $resource);
             $headerSize = curl_getinfo($resource, CURLINFO_HEADER_SIZE);
-            $headers = mb_substr($response, 0, $headerSize - 4);
             $content = mb_substr($response, $headerSize);
-            $headers = explode("\r\n", $headers);
-            $status = array_shift($headers);
-            $headers = implode("\r\n", $headers);
+            $headers = mb_substr($response, 0, $headerSize - 4);
+            $status = '';
+            $position = strrpos($headers, "\r\n\r\n");
+            if($position !== false){
+                $status = mb_substr($headers, 0, $position + 4);
+                $headers = mb_substr($headers, $position + 4);
+            }
+            $position = strpos($headers, "\r\n");
+            $status .= mb_substr($headers, 0, $position);
+            $headers = mb_substr($headers, $position + 2);
             $responses[$key] = [$status, $headers, $content, $response];
         }
         curl_multi_close($mh);

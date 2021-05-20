@@ -108,6 +108,10 @@ class Response extends BaseObject
      */
     public function __construct($status, $headers, $content, $response)
     {
+        $position = strrpos($status, "\r\n\r\n");
+        if($position !== false){
+            $status = mb_substr($status, $position + 4);
+        }
         $status = explode(' ', $status);
         if(count($status) > 2){
             $this->httpVersion = array_shift($status);
