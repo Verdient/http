@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Verdient\http\transport;
 
+use Verdient\http\exception\ConnectionRefusedException;
+use Verdient\http\exception\HttpException;
+use Verdient\http\exception\TimeoutException;
 use Verdient\http\Request;
 
 /**
@@ -30,40 +33,41 @@ class CUrlTransport extends AbstractTransport
      * @return array
      * @author Verdient。
      */
-    protected function prepare(Request $request){
+    protected function prepare(Request $request)
+    {
         $options = static::DEFAULT_OPTIONS;
         $options[CURLOPT_URL] = $request->getUrl();
         $method = strtoupper($request->getMethod());
-        if($method === 'HEAD'){
+        if ($method === 'HEAD') {
             $options[CURLOPT_NOBODY] = true;
             unset($options[CURLOPT_WRITEFUNCTION]);
         }
-        if(!in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])){
+        if (!in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
             unset($options[CURLOPT_POSTFIELDS]);
             unset($options[CURLOPT_POST]);
         }
         $options[CURLOPT_CUSTOMREQUEST] = $method;
-        if(!empty($request->getHeaders())){
+        if (!empty($request->getHeaders())) {
             $headers = [];
-            foreach($request->getHeaders() as $key => $value){
-                if(is_array($value)){
-                    foreach($value as $element){
+            foreach ($request->getHeaders() as $key => $value) {
+                if (is_array($value)) {
+                    foreach ($value as $element) {
                         $headers[] = $key . ':' . $element;
                     }
-                }else{
+                } else {
                     $headers[] = $key . ':' . $value;
                 }
             }
             $options[CURLOPT_HTTPHEADER] = $headers;
         }
-        if(!empty($request->getContent())){
+        if (!empty($request->getContent())) {
             $options[CURLOPT_POST] = true;
             $options[CURLOPT_POSTFIELDS] = $request->getContent();
         }
-        if($request->getProxyHost()){
+        if ($request->getProxyHost()) {
             $options[CURLOPT_PROXY] = $request->getProxyHost();
         }
-        if($request->getProxyPort()){
+        if ($request->getProxyPort()) {
             $options[CURLOPT_PROXYPORT] = $request->getProxyPort();
         }
         $options[CURLOPT_TIMEOUT] = $request->getTimeout();
@@ -75,22 +79,31 @@ class CUrlTransport extends AbstractTransport
      * @inheritdoc
      * @author Verdient。
      */
-    public function send(Request $request){
+    public function send(Request $request)
+    {
         $options = $this->prepare($request);
         $curl = curl_init();
         curl_setopt_array($curl, $options);
         $response = curl_exec($curl);
-        if($response === false){
-            $error = curl_error($curl) ?: curl_strerror(curl_errno($curl));
+        if ($response === false) {
+            $errorNo = curl_errno($curl);
+            $errorMessage = '[' . $errorNo . '] ' . curl_error($curl) ?: curl_strerror($errorNo);
             curl_close($curl);
-            throw new \Exception($error);
+            switch ($errorNo) {
+                case CURLE_COULDNT_CONNECT:
+                    throw new ConnectionRefusedException($errorMessage, $errorNo);
+                case CURLE_OPERATION_TIMEOUTED:
+                    throw new TimeoutException($errorMessage, $errorNo);
+                default:
+                    throw new HttpException($errorMessage, $errorNo);
+            }
         }
         $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
         $content = mb_substr($response, $headerSize);
         $headers = mb_substr($response, 0, $headerSize - 4);
         $status = '';
         $position = strrpos($headers, "\r\n\r\n");
-        if($position !== false){
+        if ($position !== false) {
             $status = mb_substr($headers, 0, $position + 4);
             $headers = mb_substr($headers, $position + 4);
         }
@@ -105,31 +118,32 @@ class CUrlTransport extends AbstractTransport
      * @inheritdoc
      * @author Verdient。
      */
-    public function batchSend(array $requests){
+    public function batchSend(array $requests)
+    {
         $resources = [];
         $mh = curl_multi_init();
-        foreach($requests as $key => $request){
+        foreach ($requests as $key => $request) {
             $resource = curl_init();
             $options = $this->prepare($request);
             curl_setopt_array($resource, $options);
             $resources[$key] = $resource;
             curl_multi_add_handle($mh, $resource);
         }
-        try{
+        try {
             $running = null;
-            do{
-                if(curl_multi_select($mh) === -1) {
+            do {
+                if (curl_multi_select($mh) === -1) {
                     usleep(100);
                 }
-                do{
+                do {
                     $code = curl_multi_exec($mh, $running);
-                }while($code === CURLM_CALL_MULTI_PERFORM);
-            }while($running > 0 && $code === CURLM_OK);
-        }catch(\Exception $e){
-            throw new \Exception($e->getMessage(), $e->getCode(), $e);
+                } while ($code === CURLM_CALL_MULTI_PERFORM);
+            } while ($running > 0 && $code === CURLM_OK);
+        } catch (\Throwable $e) {
+            throw new HttpException($e->getMessage(), $e->getCode(), $e);
         }
         $responses = [];
-        foreach($resources as $key => $resource){
+        foreach ($resources as $key => $resource) {
             $response = curl_multi_getcontent($resource);
             curl_multi_remove_handle($mh, $resource);
             $headerSize = curl_getinfo($resource, CURLINFO_HEADER_SIZE);
@@ -137,7 +151,7 @@ class CUrlTransport extends AbstractTransport
             $headers = mb_substr($response, 0, $headerSize - 4);
             $status = '';
             $position = strrpos($headers, "\r\n\r\n");
-            if($position !== false){
+            if ($position !== false) {
                 $status = mb_substr($headers, 0, $position + 4);
                 $headers = mb_substr($headers, $position + 4);
             }

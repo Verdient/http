@@ -7,6 +7,10 @@ namespace Verdient\http\transport;
 use Verdient\http\Request;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
+use Verdient\http\exception\ConnectionRefusedException;
+use Verdient\http\exception\ConnectionResetException;
+use Verdient\http\exception\HttpException;
+use Verdient\http\exception\TimeoutException;
 use function Swoole\Coroutine\run as coroutineRun;
 use function Swoole\Coroutine\batch as batchCoroutine;
 
@@ -27,13 +31,13 @@ class CoroutineTransport extends AbstractTransport
         $options = [];
         $url = parse_url($request->getUrl());
         $options['https'] = $url['scheme'] === 'https';
-        if(isset($url['port'])){
+        if (isset($url['port'])) {
             $options['port'] = $url['port'];
-        }else{
+        } else {
             $options['port'] = $options['https'] ? 443 : 80;
         }
         $options['path'] = isset($url['path']) ? $url['path'] : '/';
-        if(isset($url['query'])){
+        if (isset($url['query'])) {
             $options['path'] .= '?' . $url['query'];
         }
         $options['headers'] = $request->getHeaders();
@@ -42,10 +46,10 @@ class CoroutineTransport extends AbstractTransport
         $options['timeout'] = $request->getTimeout();
         $options['host'] = $url['host'];
         $options['headers']['Host'] = $url['host'];
-        if($request->getProxyHost()){
+        if ($request->getProxyHost()) {
             $options['proxyHost'] = $request->getProxyHost();
         }
-        if($request->getProxyPort()){
+        if ($request->getProxyPort()) {
             $options['proxyPort'] = $request->getProxyPort();
         }
         return $options;
@@ -115,11 +119,11 @@ class CoroutineTransport extends AbstractTransport
         $headers = [];
         $content = null;
         $response = null;
-        if(Coroutine::getPcid() === false){
-            coroutineRun(function() use ($request, &$status, &$headers, &$content, &$response){
+        if (Coroutine::getPcid() === false) {
+            coroutineRun(function () use ($request, &$status, &$headers, &$content, &$response) {
                 list($status, $headers, $content, $response) = $this->request($this->prepare($request));
             });
-        }else{
+        } else {
             list($status, $headers, $content, $response) = $this->request($this->prepare($request));
         }
         return [$status, $headers, $content, $response];
@@ -132,26 +136,26 @@ class CoroutineTransport extends AbstractTransport
     public function batchSend(array $requests)
     {
         $responses = [];
-        if(Coroutine::getPcid() === false){
-            coroutineRun(function() use ($requests, &$responses){
-                foreach($requests as $key => $request){
-                    Coroutine::create(function () use ($request, $key, &$responses){
+        if (Coroutine::getPcid() === false) {
+            coroutineRun(function () use ($requests, &$responses) {
+                foreach ($requests as $key => $request) {
+                    Coroutine::create(function () use ($request, $key, &$responses) {
                         list($status, $headers, $content, $response) = $this->request($this->prepare($request));
                         $responses[$key] = [$status, $headers, $content, $response];
                     });
                 }
             });
-        }else{
+        } else {
             $tasks = [];
-            foreach($requests as $key => $request){
-                $tasks[$key] = function() use ($request){
+            foreach ($requests as $key => $request) {
+                $tasks[$key] = function () use ($request) {
                     return $this->request($this->prepare($request));
                 };
             }
             $responses = batchCoroutine($tasks);
         }
         $result = [];
-        foreach($requests as $key => $requests){
+        foreach ($requests as $key => $requests) {
             $result[$key] = $responses[$key];
         }
         unset($responses);
@@ -174,25 +178,35 @@ class CoroutineTransport extends AbstractTransport
         $client->setData($options['content']);
         $client->setMethod($options['method']);
         $sets = [];
-        foreach(['proxyHost' => 'http_proxy_host', 'proxyPort' => 'http_proxy_port', 'timeout' => 'timeout'] as $option => $config){
-            if(isset($options[$option])){
+        foreach (['proxyHost' => 'http_proxy_host', 'proxyPort' => 'http_proxy_port', 'timeout' => 'timeout'] as $option => $config) {
+            if (isset($options[$option])) {
                 $sets[$config] = $options[$option];
             }
         }
         $client->set($sets);
         $client->execute($options['path']);
-        if($client->errCode !== 0){
-            throw new \Exception(socket_strerror($client->errCode));
+        if ($client->errCode !== 0) {
+            $errorMessage = '[' . $client->errCode . '] ' . socket_strerror($client->errCode);
+            switch ($client->statusCode) {
+                case -1:
+                    throw new ConnectionRefusedException($errorMessage, $client->errCode);
+                case -2:
+                    throw new TimeoutException($errorMessage, $client->errCode);
+                case -3:
+                    throw new ConnectionResetException($errorMessage, $client->errCode);
+                default:
+                    throw new HttpException($errorMessage, $client->errCode);
+            }
         }
         $statusCode = $client->statusCode;
         $cookies = $client->set_cookie_headers;
-        if(is_array($cookies)){
-            foreach($cookies as $value){
+        if (is_array($cookies)) {
+            foreach ($cookies as $value) {
                 $headers[] = 'Set-Cookie: ' . $value;
             }
         }
-        foreach($client->getHeaders() as $name => $value){
-            if(strtolower($name) !== 'set-cookie'){
+        foreach ($client->getHeaders() as $name => $value) {
+            if (strtolower($name) !== 'set-cookie') {
                 $headers[] = ucwords($name, '-') . ': ' . $value;
             }
         }

@@ -2,7 +2,11 @@
     "name": "verdient/http",
     "description": "php http client",
     "type": "library",
-    "keywords": ["http", "request", "restful"],
+    "keywords": [
+        "http",
+        "request",
+        "restful"
+    ],
     "homepage": "https://github.com/Verdient/http",
     "license": "MIT",
     "authors": [
@@ -20,7 +24,12 @@
         "php": ">=7.0.0",
         "verdient/chorus": "~0.1.0"
     },
+    "require-dev": {
+        "swoole/ide-helper": "^4.8"
+    },
     "autoload": {
-        "psr-4": {"Verdient\\http\\": "src"}
+        "psr-4": {
+            "Verdient\\http\\": "src"
+        }
     }
 }

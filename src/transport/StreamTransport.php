@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Verdient\http\transport;
 
+use Verdient\http\exception\HttpException;
 use Verdient\http\Request;
 
 /**
@@ -35,14 +36,14 @@ class StreamTransport extends AbstractTransport
     {
         $options = static::DEFAULT_OPTIONS;
         $options['http']['method'] = strtoupper($request->getMethod());
-        if(!empty($request->getHeaders())){
+        if (!empty($request->getHeaders())) {
             $headers = [];
-            foreach($request->getHeaders() as $key => $value){
-                if(is_array($value)){
-                    foreach($value as $element){
+            foreach ($request->getHeaders() as $key => $value) {
+                if (is_array($value)) {
+                    foreach ($value as $element) {
                         $headers[] = $key . ':' . $element;
                     }
-                }else{
+                } else {
                     $headers[] = $key . ':' . $value;
                 }
             }
@@ -50,10 +51,10 @@ class StreamTransport extends AbstractTransport
         }
         $options['http']['content'] = $request->getContent();
         $options['http']['timeout'] = $request->getTimeout();
-        if($request->getProxyHost()){
+        if ($request->getProxyHost()) {
             $options['http']['proxy'] = 'tcp://' . $request->getProxyHost();
         }
-        if($request->getProxyPort()){
+        if ($request->getProxyPort()) {
             $options['http']['proxy'] .= ':' . $request->getProxyPort();
         }
         return $options;
@@ -67,7 +68,10 @@ class StreamTransport extends AbstractTransport
     {
         $options = $this->prepare($request);
         $context = stream_context_create($options);
-        $stream = fopen($request->getUrl(), 'rb', false, $context);
+        if (!$stream = @fopen($request->getUrl(), 'rb', false, $context)) {
+            $error = error_get_last();
+            throw new HttpException($error['message'] ?? json_encode($error));
+        }
         $content = stream_get_contents($stream);
         $rawHeaders = (array) $http_response_header;
         $response = implode("\r\n", $rawHeaders) . "\r\n\r\n" . $content;
