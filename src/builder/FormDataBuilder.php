@@ -1,4 +1,5 @@
 <?php
+
 namespace Verdient\http\builder;
 
 /**
@@ -38,7 +39,7 @@ class FormDataBuilder extends Builder
      */
     public function getBoundary()
     {
-        if(!$this->boundary){
+        if (!$this->boundary) {
             $this->boundary = hash('sha256', random_bytes(64));
         }
         return $this->boundary;
@@ -53,7 +54,7 @@ class FormDataBuilder extends Builder
      */
     public function addTexts(array $data)
     {
-        foreach($data as $name => $value){
+        foreach ($data as $name => $value) {
             $this->addText($name, $value);
         }
         return $this;
@@ -65,9 +66,9 @@ class FormDataBuilder extends Builder
      * @return static
      * @author Verdient。
      */
-    public function addFiles(Array $data)
+    public function addFiles(array $data)
     {
-        foreach($data as $name => $path){
+        foreach ($data as $name => $path) {
             $this->addFile($name, $path);
         }
         return $this;
@@ -101,11 +102,12 @@ class FormDataBuilder extends Builder
      * 转换数组键值
      * @author Verdient。
      */
-    protected function convertArrayKey(&$node, $prefix, &$result) {
-        if(!is_array($node)){
+    protected function convertArrayKey(&$node, $prefix, &$result)
+    {
+        if (!is_array($node)) {
             $result[$prefix] = $node;
-        }else{
-            foreach($node as $key => $value){
+        } else {
+            foreach ($node as $key => $value) {
                 $this->convertArrayKey($value, "{$prefix}[{$key}]", $result);
             }
         }
@@ -120,31 +122,31 @@ class FormDataBuilder extends Builder
         $boundary = $this->getBoundary();
         $texts = [];
         $files = [];
-        foreach($this->getElements() as $name => $value){
-            if($value[0] === static::TEXT){
+        foreach ($this->getElements() as $name => $value) {
+            if ($value[0] === static::TEXT) {
                 $texts[$name] = $value[1];
-            }else if($value[0] === static::FILE){
+            } else if ($value[0] === static::FILE) {
                 $files[$name] = $value[1];
             }
         }
         $body = [];
-        foreach($texts as $key => $value){
-            if(!is_array($value)){
+        foreach ($texts as $key => $value) {
+            if (!is_array($value)) {
                 $body_part = "Content-Disposition: form-data; name=\"$key\"\r\n";
                 $body_part .= "\r\n$value";
                 $body[] = $body_part;
-            }else{
+            } else {
                 $result = [];
                 $this->convertArrayKey($value, $key, $result);
-                foreach($result as $k => $v){
+                foreach ($result as $k => $v) {
                     $body_part = "Content-Disposition: form-data; name=\"$k\"\r\n";
                     $body_part .= "\r\n$v";
                     $body[] = $body_part;
                 }
             }
         }
-        foreach($files as $key => $value){
-            if(!file_exists($value)){
+        foreach ($files as $key => $value) {
+            if (!file_exists($value)) {
                 throw new \Exception('file ' . $value . ' does not exist');
             }
             $type = mime_content_type($value);
@@ -157,5 +159,22 @@ class FormDataBuilder extends Builder
         $multipart_body .= implode("\r\n--$boundary\r\n", $body);
         $multipart_body .= "\r\n--$boundary--";
         return $multipart_body;
+    }
+
+    /**
+     * @inheritdoc
+     * @author Verdient。
+     */
+    public function headers()
+    {
+        if (!empty($this->contentType)) {
+            $contentType = $this->contentType . '; boundary=' . $this->getBoundary();
+            if (!empty($this->charset)) {
+                $contentType .= '; charset=' . $this->charset;
+            }
+            return [
+                'Content-Type' => $contentType
+            ];
+        }
     }
 }
