@@ -39,7 +39,7 @@ class Response extends BaseObject
     /**
      * @var array 解析器
      * @author Verdient。
-    */
+     */
     public $parsers = [];
 
     /**
@@ -109,11 +109,11 @@ class Response extends BaseObject
     public function __construct($status, $headers, $content, $response)
     {
         $position = strrpos($status, "\r\n\r\n");
-        if($position !== false){
+        if ($position !== false) {
             $status = mb_substr($status, $position + 4);
         }
         $status = explode(' ', $status);
-        if(count($status) > 2){
+        if (count($status) > 2) {
             $this->httpVersion = array_shift($status);
             $this->statusCode = (int) array_shift($status);
             $this->statusMessage = implode(' ', $status);
@@ -132,15 +132,15 @@ class Response extends BaseObject
      */
     protected function getParser($name, $charset = null)
     {
-        if($name){
-            foreach([$this->parsers, static::BUILT_IN_PARSERS] as $parsers){
+        if ($name) {
+            foreach ([$this->parsers, static::BUILT_IN_PARSERS] as $parsers) {
                 $parser = $parsers[strtolower($name)] ?? null;
-                if($parser){
+                if ($parser) {
                     $parser = ObjectHelper::create($parser);
-                    if(!$parser instanceof ResponseParserInterface){
+                    if (!$parser instanceof ResponseParserInterface) {
                         throw new \Exception('parser must implements ' . ResponseParserInterface::class);
                     }
-                    if(!empty($charset)){
+                    if (!empty($charset)) {
                         $parser->charset = $charset;
                     }
                     return $parser;
@@ -187,35 +187,36 @@ class Response extends BaseObject
      */
     public function getBody()
     {
-        if($this->body === false){
+        if ($this->body === false) {
             $this->body = null;
-            if($this->rawContent){
+            if ($this->rawContent) {
                 $this->body = $this->rawContent;
                 $content = $this->rawContent;
-                if(ord(substr($content, 0, 1)) === 239 && ord(substr($content, 1, 1)) === 187 && ord(substr($content, 2, 1)) === 191){
+                if (ord(substr($content, 0, 1)) === 239 && ord(substr($content, 1, 1)) === 187 && ord(substr($content, 2, 1)) === 191) {
                     $content = substr($content, 3);
                 }
                 $parsed = false;
                 $parser = $this->getParser($this->getContentType(), $this->getCharset());
-                if($parser){
+                if ($parser) {
                     $body = $parser->parse($content);
-                    if($body){
+                    if ($body !== false) {
                         $parsed = true;
-                        $this->body = $parser->parse($content);
+                        $this->body = $body;
                     }
                 }
-                if(!$parsed && $this->tryParse === true){
-                    foreach([$this->parsers, static::BUILT_IN_PARSERS] as $parsers){
-                        foreach(array_keys($parsers) as $name){
+                if (!$parsed && $this->tryParse === true) {
+                    foreach ([$this->parsers, static::BUILT_IN_PARSERS] as $parsers) {
+                        foreach (array_keys($parsers) as $name) {
                             $parser = $this->getParser($name);
-                            if($parser->can($content)){
-                                try{
+                            if ($parser->can($content)) {
+                                try {
                                     $body = $parser->parse($content);
-                                    if($body){
+                                    if ($body) {
                                         $this->body = $parser->parse($content);
                                         break;
                                     }
-                                }catch(\Throwable $e){}
+                                } catch (\Throwable $e) {
+                                }
                             }
                         }
                     }
@@ -232,21 +233,21 @@ class Response extends BaseObject
      */
     public function getHeaders()
     {
-        if($this->headers === false){
+        if ($this->headers === false) {
             $this->headers = null;
-            if($this->rawHeaders){
+            if ($this->rawHeaders) {
                 $this->headers = [];
                 $headers = explode("\r\n", $this->rawHeaders);
-                foreach($headers as $header){
-                    if($header){
+                foreach ($headers as $header) {
+                    if ($header) {
                         $header = explode(': ', $header);
-                        if(isset($header[1])){
-                            if(isset($this->headers[$header[0]])){
-                                if(!is_array($this->headers[$header[0]])){
+                        if (isset($header[1])) {
+                            if (isset($this->headers[$header[0]])) {
+                                if (!is_array($this->headers[$header[0]])) {
                                     $this->headers[$header[0]] = [$this->headers[$header[0]]];
                                 }
                                 $this->headers[$header[0]][] = $header[1];
-                            }else{
+                            } else {
                                 $this->headers[$header[0]] = $header[1];
                             }
                         }
@@ -266,12 +267,12 @@ class Response extends BaseObject
     {
         $result = [];
         $headers = $this->getHeaders();
-        if(isset($headers['Set-Cookie'])){
-            if($cookies = $headers['Set-Cookie']){
-                if(!is_array($cookies)){
+        if (isset($headers['Set-Cookie'])) {
+            if ($cookies = $headers['Set-Cookie']) {
+                if (!is_array($cookies)) {
                     $cookies = [$cookies];
                 }
-                foreach($cookies as $cookie){
+                foreach ($cookies as $cookie) {
                     $cookie = $this->parseCookie($cookie);
                     $result[$cookie['key']] = $cookie;
                 }
@@ -293,12 +294,12 @@ class Response extends BaseObject
         unset($cookie[0]);
         $result['key'] = $keyValue[0];
         $result['value'] = urldecode($keyValue[1]);
-        foreach($cookie as $element){
+        foreach ($cookie as $element) {
             $elements = explode('=', $element);
             $name = strtolower($elements[0]);
-            if(count($elements) === 2){
+            if (count($elements) === 2) {
                 $result[$name] = $elements[1];
-            }else{
+            } else {
                 $result[$name] = true;
             }
         }
@@ -312,10 +313,10 @@ class Response extends BaseObject
      */
     public function getContentType()
     {
-        if($this->contentType === false){
+        if ($this->contentType === false) {
             $this->contentType = null;
             $header = $this->getHeaders();
-            if(isset($header['Content-Type'])){
+            if (isset($header['Content-Type'])) {
                 $this->contentType = explode(';', $header['Content-Type'])[0];
             }
         }
@@ -329,11 +330,11 @@ class Response extends BaseObject
      */
     public function getCharset()
     {
-        if($this->charset === false){
+        if ($this->charset === false) {
             $this->charset = null;
             $header = $this->getHeaders();
-            if(isset($header['Content-Type'])){
-                if(preg_match('/charset=(.*)/i', $header['Content-Type'], $matches)){
+            if (isset($header['Content-Type'])) {
+                if (preg_match('/charset=(.*)/i', $header['Content-Type'], $matches)) {
                     $this->charset = $matches[1];
                 }
             }
