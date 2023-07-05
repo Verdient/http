@@ -1,4 +1,5 @@
 <?php
+
 namespace Verdient\http\parser;
 
 /**
@@ -31,11 +32,12 @@ class XmlParser extends ResponseParser
      */
     public function parse($response)
     {
-        $dom = new \DOMDocument('1.0', $this->charset);
-        set_error_handler(function(){});
+        $dom = new \DOMDocument('1.0', $this->charset ?: '');
+        set_error_handler(function () {
+        });
         $dom->loadXML($response, $this->options);
         restore_error_handler();
-        if($dom->documentElement){
+        if ($dom->documentElement) {
             return $this->convertXmlToArray(simplexml_import_dom($dom->documentElement));
         }
         return null;
@@ -49,12 +51,12 @@ class XmlParser extends ResponseParser
      */
     protected function convertXmlToArray($xml)
     {
-        if(is_string($xml)){
+        if (is_string($xml)) {
             $xml = simplexml_load_string($xml, 'SimpleXMLElement', $this->options);
         }
         $result = (array) $xml;
-        foreach($result as $key => $value){
-            if(!is_scalar($value)){
+        foreach ($result as $key => $value) {
+            if (!is_scalar($value)) {
                 $result[$key] = $this->convertXmlToArray($value);
             }
         }

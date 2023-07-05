@@ -1,4 +1,5 @@
 <?php
+
 namespace Verdient\http\builder;
 
 /**
@@ -29,7 +30,8 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
      * @inheritdoc
      * @author Verdient。
      */
-    public function getElements(){
+    public function getElements()
+    {
         return $this->_elements;
     }
 
@@ -37,7 +39,8 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
      * @inheritdoc
      * @author Verdient。
      */
-    public function setElements($elements){
+    public function setElements($elements)
+    {
         $this->_elements = $elements;
         return $this;
     }
@@ -46,7 +49,8 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
      * @inheritdoc
      * @author Verdient。
      */
-    public function addElement($name, $value){
+    public function addElement($name, $value)
+    {
         $this->_elements[$name] = $value;
         return $this;
     }
@@ -55,7 +59,8 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
      * @inheritdoc
      * @author Verdient。
      */
-    public function removeElement($name){
+    public function removeElement($name)
+    {
         unset($this->_elements[$name]);
         return $this;
     }
@@ -64,10 +69,11 @@ abstract class Builder extends \chorus\BaseObject implements BuilderInterface
      * @inheritdoc
      * @author Verdient。
      */
-    public function headers(){
-        if(!empty($this->contentType)){
+    public function headers()
+    {
+        if (!empty($this->contentType)) {
             $contentType = $this->contentType;
-            if(!empty($this->charset)){
+            if (!empty($this->charset)) {
                 $contentType .= '; charset=' . $this->charset;
             }
             return [

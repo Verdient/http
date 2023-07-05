@@ -18,8 +18,8 @@ class UrlencodedParser extends ResponseParser
     {
         $a = strpos($response, '=');
         $b = strpos($response, '&');
-        if($a > 0){
-            if($b !== false){
+        if ($a > 0) {
+            if ($b !== false) {
                 return $b > $a;
             }
             return true;

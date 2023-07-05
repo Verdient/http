@@ -40,9 +40,9 @@ class JsonParser extends ResponseParser
      */
     public function parse($response)
     {
-        try{
+        try {
             return json_decode($response, true, $this->depth, $this->options);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return false;
         }
     }

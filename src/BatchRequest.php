@@ -1,4 +1,5 @@
 <?php
+
 namespace Verdient\http;
 
 use chorus\BaseObject;
@@ -67,7 +68,7 @@ class BatchRequest extends BaseObject
      */
     public function setRequests($requests, $batchSize = null)
     {
-        if(!$batchSize){
+        if (!$batchSize) {
             $batchSize = $this->batchSize;
         }
         $this->requests = array_chunk($requests, $batchSize, true);
@@ -82,10 +83,10 @@ class BatchRequest extends BaseObject
      */
     public function getTransport()
     {
-        foreach([$this->transports, static::BUILT_IN_TRANSPORTS] as $transports){
-            if(isset($transports[$this->transport])){
+        foreach ([$this->transports, static::BUILT_IN_TRANSPORTS] as $transports) {
+            if (isset($transports[$this->transport])) {
                 $transport = ObjectHelper::create($transports[$this->transport]);
-                if(!$transport instanceof TransportInterface){
+                if (!$transport instanceof TransportInterface) {
                     throw new InvalidConfigException('transport must instance of ' . TransportInterface::class);
                 }
                 return $transport;
@@ -101,12 +102,12 @@ class BatchRequest extends BaseObject
     public function send()
     {
         $responses = [];
-        foreach($this->requests as $requests){
-            foreach($requests as $request){
+        foreach ($this->requests as $requests) {
+            foreach ($requests as $request) {
                 $request->trigger(Request::EVENT_BEFORE_REQUEST, $request);
                 $request->prepare();
             }
-            foreach($this->getTransport()->batchSend($requests) as $key => $result){
+            foreach ($this->getTransport()->batchSend($requests) as $key => $result) {
                 list($statusCode, $headers, $content, $response) = $result;
                 $request = $requests[$key];
                 $request->trigger(Request::EVENT_AFTER_REQUEST);

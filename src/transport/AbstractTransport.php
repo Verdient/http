@@ -1,4 +1,5 @@
 <?php
+
 namespace Verdient\http\transport;
 
 /**
@@ -14,7 +15,7 @@ abstract class AbstractTransport implements TransportInterface
     public function batchSend(array $requests)
     {
         $responses = [];
-        foreach($requests as $key => $request){
+        foreach ($requests as $key => $request) {
             $responses[$key] = $this->send($request);
         }
         return $responses;

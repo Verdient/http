@@ -69,7 +69,7 @@ class Request extends BaseObject
     /**
      * @var array 解析器
      * @author Verdient。
-    */
+     */
     public $parsers = [];
 
     /**
@@ -176,11 +176,11 @@ class Request extends BaseObject
      */
     public function getBuilder($name)
     {
-        foreach([$this->builders, static::BUILT_IN_BUILDERS] as $builders){
+        foreach ([$this->builders, static::BUILT_IN_BUILDERS] as $builders) {
             $builder = $builders[strtolower($name)] ?? null;
-            if($builder){
+            if ($builder) {
                 $builder = ObjectHelper::create($builder);
-                if(!$builder instanceof BuilderInterface){
+                if (!$builder instanceof BuilderInterface) {
                     throw new InvalidConfigException('builder must instance of ' . BuilderInterface::class);
                 }
                 return $builder;
@@ -197,10 +197,10 @@ class Request extends BaseObject
      */
     public function getTransport()
     {
-        foreach([$this->transports, static::BUILT_IN_TRANSPORTS] as $transports){
-            if(isset($transports[$this->transport])){
+        foreach ([$this->transports, static::BUILT_IN_TRANSPORTS] as $transports) {
+            if (isset($transports[$this->transport])) {
                 $transport = ObjectHelper::create($transports[$this->transport]);
-                if(!$transport instanceof TransportInterface){
+                if (!$transport instanceof TransportInterface) {
                     throw new InvalidConfigException('transport must instance of ' . TransportInterface::class);
                 }
                 return $transport;
@@ -275,7 +275,7 @@ class Request extends BaseObject
      */
     public function addFilterHeader($key, $value)
     {
-        if(!empty($value)){
+        if (!empty($value)) {
             return $this->addHeader($key, $value);
         }
         return $this;
@@ -325,7 +325,7 @@ class Request extends BaseObject
      */
     public function addFilterQuery($key, $value)
     {
-        if(!empty($value)){
+        if (!empty($value)) {
             return $this->addQuery($key, $value);
         }
         return $this;
@@ -375,7 +375,7 @@ class Request extends BaseObject
      */
     public function addFilterBody($key, $value)
     {
-        if(!empty($value)){
+        if (!empty($value)) {
             return $this->addBody($key, $value);
         }
         return $this;
@@ -542,8 +542,8 @@ class Request extends BaseObject
     public function prepare()
     {
         $this->url = $this->normalizeUrl($this->url);
-        if(in_array($this->method, ['POST', 'PUT', 'DELETE', 'PATCH'])){
-            if(empty($this->content) && !empty($this->body)){
+        if (in_array($this->method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+            if (empty($this->content) && !empty($this->body)) {
                 $this->content = $this->normalizeContent($this->body, $this->bodySerializer);
             }
             $this->addHeader('Content-Length', strlen($this->content));
@@ -560,16 +560,16 @@ class Request extends BaseObject
     public function normalizeUrl($url)
     {
         $url = parse_url($url);
-        foreach(['scheme', 'host'] as $name){
-            if(!isset($url[$name])){
+        foreach (['scheme', 'host'] as $name) {
+            if (!isset($url[$name])) {
                 throw new InvalidParamException('Url is not a valid url');
             }
         }
         $query = [];
-        if(isset($url['query'])){
+        if (isset($url['query'])) {
             parse_str($url['query'], $query);
         }
-        if(!empty($this->query)){
+        if (!empty($this->query)) {
             $query = array_merge($query, $this->query);
         }
         $url = $url['scheme'] . '://' .
@@ -594,20 +594,20 @@ class Request extends BaseObject
      */
     public function normalizeContent($data, $serializer = null)
     {
-        if(is_callable($serializer)){
+        if (is_callable($serializer)) {
             $data = call_user_func($serializer, $data);
-        }else if(is_string($serializer) && !empty($serializer) && is_array($data)){
+        } else if (is_string($serializer) && !empty($serializer) && is_array($data)) {
             $builder = $this->getBuilder($serializer);
             $builder->setElements($data);
             $data = $builder;
         }
-        if($data instanceof BuilderInterface){
-            foreach($data->headers() as $name => $value){
+        if ($data instanceof BuilderInterface) {
+            foreach ($data->headers() as $name => $value) {
                 $this->addHeader($name, $value);
             }
             $data = $data->toString();
         }
-        if(!is_string($data)){
+        if (!is_string($data)) {
             throw new InvalidParamException('content must be a string');
         }
         return $data;

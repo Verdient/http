@@ -1,4 +1,5 @@
 <?php
+
 namespace Verdient\http\builder;
 
 use DOMDocument;
@@ -51,7 +52,7 @@ class XmlBuilder extends Builder
     {
         $data = $this->getElements();
         $content = false;
-        if(!empty($data)){
+        if (!empty($data)) {
             if ($data instanceof DOMDocument) {
                 $content = $data->saveXML();
             } elseif ($data instanceof SimpleXMLElement) {
@@ -76,21 +77,21 @@ class XmlBuilder extends Builder
      */
     protected function buildXml($element, $data)
     {
-        if(is_array($data) || ($data instanceof \Traversable && $this->useTraversableAsArray)){
-            foreach($data as $name => $value){
-                if(is_int($name) && is_object($value)){
+        if (is_array($data) || ($data instanceof \Traversable && $this->useTraversableAsArray)) {
+            foreach ($data as $name => $value) {
+                if (is_int($name) && is_object($value)) {
                     $this->buildXml($element, $value);
-                }elseif (is_array($value) || is_object($value)){
+                } elseif (is_array($value) || is_object($value)) {
                     $child = new DOMElement(is_int($name) ? $this->itemTag : $name);
                     $element->appendChild($child);
                     $this->buildXml($child, $value);
-                }else{
+                } else {
                     $child = new DOMElement(is_int($name) ? $this->itemTag : $name);
                     $element->appendChild($child);
                     $child->appendChild(new DOMText((string) $value));
                 }
             }
-        }elseif(is_object($data)){
+        } elseif (is_object($data)) {
             $child = new DOMElement(StringHelper::basename(get_class($data)));
             $element->appendChild($child);
             $array = [];
@@ -98,7 +99,7 @@ class XmlBuilder extends Builder
                 $array[$name] = $value;
             }
             $this->buildXml($child, $array);
-        }else{
+        } else {
             $element->appendChild(new DOMText((string) $data));
         }
     }

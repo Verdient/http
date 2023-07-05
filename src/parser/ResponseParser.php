@@ -1,4 +1,5 @@
 <?php
+
 namespace Verdient\http\parser;
 
 /**
