@@ -290,6 +290,7 @@ class Request
         $this->scheme = $components['scheme'];
         $this->host = $components['host'];
         $this->port = $components['port'] ?? null;
+        $this->path = $components['path'] ?? null;
         $this->user = $components['user'] ?? null;
         $this->pass = $components['pass'] ?? null;
         $this->fragment = $components['fragment'] ?? null;
