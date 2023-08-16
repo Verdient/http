@@ -156,7 +156,7 @@ class Request
     /**
      * 设置传输通道
      * @param $name 通道名称
-     * @return TransportInterface
+     * @return static
      * @author Verdient。
      */
     public function setTransport(string $transport)
@@ -170,11 +170,11 @@ class Request
             }
         }
         $this->transport = $transport;
+        return $this;
     }
 
     /**
      * 获取传输通道
-     * @param $name 通道名称
      * @return TransportInterface
      * @author Verdient。
      */
@@ -194,10 +194,10 @@ class Request
     /**
      * 设置消息体序列化器
      * @param string $serializer 序列化器
-     * @return string
+     * @return static
      * @author Verdient。
      */
-    public function setBodySerializer($serializer)
+    public function setBodySerializer(string $serializer)
     {
         if (!class_exists($serializer)) {
             throw new InvalidConfigException('Unknown body serializer: ' . $serializer);
@@ -206,6 +206,7 @@ class Request
             throw new InvalidConfigException('Body serializer must implements ' . BodySerializerInterface::class);
         }
         $this->bodySerializer = $serializer;
+        return $this;
     }
 
     /**
@@ -221,10 +222,10 @@ class Request
     /**
      * 设置查询参数序列化器
      * @param string $serializer 解析器
-     * @return string
+     * @return static
      * @author Verdient。
      */
-    public function setQuerySerializer($serializer)
+    public function setQuerySerializer(string $serializer)
     {
         if (!class_exists($serializer)) {
             throw new InvalidConfigException('Unknown query serializer: ' . $serializer);
@@ -233,6 +234,7 @@ class Request
             throw new InvalidConfigException('Query serializer must implements ' . SerializerInterface::class);
         }
         $this->querySerializer = $serializer;
+        return $this;
     }
 
     /**
@@ -248,10 +250,10 @@ class Request
     /**
      * 设置解析器
      * @param string $parser 解析器
-     * @return string
+     * @return static
      * @author Verdient。
      */
-    public function setParser($parser)
+    public function setParser(string $parser)
     {
         if ($parser !== 'auto') {
             if (!class_exists($parser)) {
@@ -262,6 +264,7 @@ class Request
             }
         }
         $this->parser = $parser;
+        return $this;
     }
 
     /**
@@ -280,7 +283,7 @@ class Request
      * @return static
      * @author Verdient。
      */
-    public function setUrl($url)
+    public function setUrl(string $url)
     {
         $this->url = null;
         $components = parse_url($url);
