@@ -344,7 +344,7 @@ class Request
                 'auth@' => $auth ? ($auth . '@') : '',
                 'host' => $this->host ?: '',
                 ':port' => ($port ? ':' . $port : ''),
-                '/path' => $this->path ? ('/' . $this->path) : '',
+                '/path' => $this->path ?: '',
                 '?query' => $query ? ('?' . $query) : '',
                 '#fragment' => $this->fragment ? '#' . $this->fragment : ''
             ] as $name => $value) {
