@@ -2,35 +2,110 @@
 
 namespace Verdient\http\builder;
 
+use Verdient\http\serializer\body\FormDataSerializer;
+
 /**
- * 表单构建器
+ * 表单序列化器
  * @author Verdient。
  */
-class FormDataBuilder extends Builder
+class FormDataBuilder implements BuilderInterface
 {
     /**
      * @inheritdoc
      * @author Verdient。
      */
-    public $contentType = 'multipart/form-data';
-
-    /**
-     * @var string 文本类型
-     * @author Verdient。
-     */
-    const TEXT = 1;
-
-    /**
-     * @var string 文件类型
-     * @author Verdient。
-     */
-    const FILE = 2;
+    public function serializer(): string
+    {
+        return FormDataSerializer::class;
+    }
 
     /**
      * @var string 分隔符
      * @author Verdient。
      */
     protected $boundary;
+
+    /**
+     * @var string[] 文本参数
+     * @author Verdient。
+     */
+    protected $texts = [];
+
+    /**
+     * @var string[] 文件参数
+     * @author Verdient。
+     */
+    protected $files = [];
+
+    /**
+     * 获取文本参数
+     * @return array
+     * @author Verdient。
+     */
+    public function getTexts()
+    {
+        return $this->texts;
+    }
+
+    /**
+     * 获取文件参数
+     * @return array
+     * @author Verdient。
+     */
+    public function getFiles()
+    {
+        return $this->files;
+    }
+
+    /**
+     * 添加文本
+     * @param string $name 名称
+     * @param string $value 内容
+     * @return static
+     * @author Verdient。
+     */
+    public function addText($name, $value)
+    {
+        $this->texts[$name] = $value;
+        return $this;
+    }
+
+    /**
+     * 移除文本
+     * @param string $name 名称
+     * @return static
+     * @author Verdient。
+     */
+    public function removeText($name)
+    {
+        unset($this->texts[$name]);
+        return $this;
+    }
+
+    /**
+     * 添加文件
+     * @param string $name 名称
+     * @param string $value 内容
+     * @return static
+     * @author Verdient。
+     */
+    public function addFile($name, $path)
+    {
+        $this->files[$name] = $path;
+        return $this;
+    }
+
+    /**
+     * 移除文件
+     * @param string $name 名称
+     * @return static
+     * @author Verdient。
+     */
+    public function removeFile($name, $path)
+    {
+        unset($this->files[$name]);
+        return $this;
+    }
 
     /**
      * 获取分隔符
@@ -43,138 +118,5 @@ class FormDataBuilder extends Builder
             $this->boundary = hash('sha256', random_bytes(64));
         }
         return $this->boundary;
-    }
-
-
-    /**
-     * 批量添加文本
-     * @param array $data 待添加的数据
-     * @return static
-     * @author Verdient。
-     */
-    public function addTexts(array $data)
-    {
-        foreach ($data as $name => $value) {
-            $this->addText($name, $value);
-        }
-        return $this;
-    }
-
-    /**
-     * 批量添加文件
-     * @param array $data 待添加的数据
-     * @return static
-     * @author Verdient。
-     */
-    public function addFiles(array $data)
-    {
-        foreach ($data as $name => $path) {
-            $this->addFile($name, $path);
-        }
-        return $this;
-    }
-
-    /**
-     * 添加文本
-     * @param string $name 名称
-     * @param string $value 内容
-     * @return static
-     * @author Verdient。
-     */
-    public function addText($name, $value)
-    {
-        return $this->addElement($name, [static::TEXT, $value]);
-    }
-
-    /**
-     * 添加文件
-     * @param string $name 名称
-     * @param string $value 内容
-     * @return static
-     * @author Verdient。
-     */
-    public function addFile($name, $path)
-    {
-        return $this->addElement($name, [static::FILE, $path]);
-    }
-
-    /**
-     * 转换数组键值
-     * @author Verdient。
-     */
-    protected function convertArrayKey(&$node, $prefix, &$result)
-    {
-        if (!is_array($node)) {
-            $result[$prefix] = $node;
-        } else {
-            foreach ($node as $key => $value) {
-                $this->convertArrayKey($value, "{$prefix}[{$key}]", $result);
-            }
-        }
-    }
-
-    /**
-     * @inheritdoc
-     * @author Verdient。
-     */
-    public function toString()
-    {
-        $boundary = $this->getBoundary();
-        $texts = [];
-        $files = [];
-        foreach ($this->getElements() as $name => $value) {
-            if ($value[0] === static::TEXT) {
-                $texts[$name] = $value[1];
-            } else if ($value[0] === static::FILE) {
-                $files[$name] = $value[1];
-            }
-        }
-        $body = [];
-        foreach ($texts as $key => $value) {
-            if (!is_array($value)) {
-                $body_part = "Content-Disposition: form-data; name=\"$key\"\r\n";
-                $body_part .= "\r\n$value";
-                $body[] = $body_part;
-            } else {
-                $result = [];
-                $this->convertArrayKey($value, $key, $result);
-                foreach ($result as $k => $v) {
-                    $body_part = "Content-Disposition: form-data; name=\"$k\"\r\n";
-                    $body_part .= "\r\n$v";
-                    $body[] = $body_part;
-                }
-            }
-        }
-        foreach ($files as $key => $value) {
-            if (!file_exists($value)) {
-                throw new \Exception('file ' . $value . ' does not exist');
-            }
-            $type = mime_content_type($value);
-            $body_part = "Content-Disposition: form-data; name=\"$key\"; filename=\"{$value}\"\r\n";
-            $body_part .= "Content-Type: {$type}\r\n";
-            $body_part .= "\r\n" . file_get_contents($value);
-            $body[] = $body_part;
-        }
-        $multipart_body = "--$boundary\r\n";
-        $multipart_body .= implode("\r\n--$boundary\r\n", $body);
-        $multipart_body .= "\r\n--$boundary--";
-        return $multipart_body;
-    }
-
-    /**
-     * @inheritdoc
-     * @author Verdient。
-     */
-    public function headers()
-    {
-        if (!empty($this->contentType)) {
-            $contentType = $this->contentType . '; boundary=' . $this->getBoundary();
-            if (!empty($this->charset)) {
-                $contentType .= '; charset=' . $this->charset;
-            }
-            return [
-                'Content-Type' => $contentType
-            ];
-        }
     }
 }

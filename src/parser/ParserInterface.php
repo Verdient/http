@@ -3,10 +3,10 @@
 namespace Verdient\http\parser;
 
 /**
- * 响应解析器接口
+ * 解析器接口
  * @author Verdient。
  */
-interface ResponseParserInterface
+interface ParserInterface
 {
     /**
      * 是否可以解析

@@ -8,7 +8,7 @@ namespace Verdient\http\parser;
  * URL编码解析器
  * @author Verdient。
  */
-class UrlencodedParser extends ResponseParser
+class UrlencodedParser extends AbstractParser
 {
     /**
      * @inheritdoc

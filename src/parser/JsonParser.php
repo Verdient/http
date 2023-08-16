@@ -8,7 +8,7 @@ namespace Verdient\http\parser;
  * JSON 解析器
  * @author Verdient。
  */
-class JsonParser extends ResponseParser
+class JsonParser extends AbstractParser
 {
     /**
      * @var int 递归深度

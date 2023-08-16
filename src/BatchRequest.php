@@ -2,48 +2,17 @@
 
 namespace Verdient\http;
 
-use chorus\BaseObject;
-use chorus\Configurable;
-use chorus\InvalidConfigException;
-use chorus\ObjectHelper;
+use Verdient\http\exception\InvalidConfigException;
+use Verdient\http\transport\CoroutineTransport;
+use Verdient\http\transport\CUrlTransport;
 use Verdient\http\transport\TransportInterface;
 
 /**
  * 批量请求
  * @author Verdient。
  */
-class BatchRequest extends BaseObject
+class BatchRequest
 {
-    use Configurable;
-
-    /**
-     * @var array 内建传输通道
-     * @author Verdient。
-     */
-    const BUILT_IN_TRANSPORTS = [
-        'cUrl' => 'Verdient\http\transport\CUrlTransport',
-        'coroutine' => 'Verdient\http\transport\CoroutineTransport',
-        'stream' => 'Verdient\http\transport\StreamTransport'
-    ];
-
-    /**
-     * 批大小
-     * @author Verdient。
-     */
-    public $batchSize = 100;
-
-    /**
-     * @var string 传输通道
-     * @author Verdient。
-     */
-    public $transport = 'cUrl';
-
-    /**
-     * @var array 传输通道
-     * @author Verdient。
-     */
-    public $transports = [];
-
     /**
      * @var array 请求集合
      * @author Verdient。
@@ -51,28 +20,38 @@ class BatchRequest extends BaseObject
     protected $requests = [];
 
     /**
-     * @inheritdoc
+     * @param array $requests 请求集合
+     * @param int $batchSize 分批大小
      * @author Verdient。
      */
-    public function __construct($config = [])
+    public function __construct(array $requests, $batchSize = 100)
     {
-        $this->configuration($config);
+        $this->requests = array_chunk($requests, $batchSize, true);
     }
 
     /**
-     * 设置请求
-     * @param array $requests 请求集合
-     * @param int $batchSize 批大小
-     * @return BatchRequest
+     * @var string 传输通道
      * @author Verdient。
      */
-    public function setRequests($requests, $batchSize = null)
+    protected $transport = 'auto';
+
+    /**
+     * 设置传输通道
+     * @param $name 通道名称
+     * @return TransportInterface
+     * @author Verdient。
+     */
+    public function setTransport(string $transport)
     {
-        if (!$batchSize) {
-            $batchSize = $this->batchSize;
+        if ($transport !== 'auto') {
+            if (!class_exists($transport)) {
+                throw new InvalidConfigException('Unknown transport: ' . $transport);
+            }
+            if (!array_key_exists(TransportInterface::class, class_implements($transport))) {
+                throw new InvalidConfigException('Transport must implements ' . TransportInterface::class);
+            }
         }
-        $this->requests = array_chunk($requests, $batchSize, true);
-        return $this;
+        $this->transport = $transport;
     }
 
     /**
@@ -81,18 +60,17 @@ class BatchRequest extends BaseObject
      * @return TransportInterface
      * @author Verdient。
      */
-    public function getTransport()
+    protected function getTransport(): TransportInterface
     {
-        foreach ([$this->transports, static::BUILT_IN_TRANSPORTS] as $transports) {
-            if (isset($transports[$this->transport])) {
-                $transport = ObjectHelper::create($transports[$this->transport]);
-                if (!$transport instanceof TransportInterface) {
-                    throw new InvalidConfigException('transport must instance of ' . TransportInterface::class);
-                }
-                return $transport;
+        if ($this->transport === 'auto') {
+            if (extension_loaded('swoole')) {
+                return new CoroutineTransport;
+            } else {
+                return new CUrlTransport;
             }
         }
-        throw new InvalidConfigException('Unknown transport ' . $this->transport);
+        $class = $this->transport;
+        return new $class;
     }
 
     /**
@@ -103,20 +81,11 @@ class BatchRequest extends BaseObject
     {
         $responses = [];
         foreach ($this->requests as $requests) {
-            foreach ($requests as $request) {
-                $request->trigger(Request::EVENT_BEFORE_REQUEST, $request);
-                $request->prepare();
-            }
             foreach ($this->getTransport()->batchSend($requests) as $key => $result) {
                 list($statusCode, $headers, $content, $response) = $result;
                 $request = $requests[$key];
-                $request->trigger(Request::EVENT_AFTER_REQUEST);
-                $responses[$key] = ObjectHelper::create([
-                    'class' => $request::responseClass(),
-                    'request' => $request,
-                    'tryParse' => $request->tryParse,
-                    'parsers' => $request->parsers
-                ], $statusCode, $headers, $content, $response);
+                $class = $request::responseClass();
+                $responses[$key] = new $class($request, $statusCode, $headers, $content, $response);
             }
         }
         return $responses;

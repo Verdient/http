@@ -4,43 +4,33 @@ declare(strict_types=1);
 
 namespace Verdient\http;
 
-use chorus\BaseObject;
-use chorus\ObjectHelper;
-use Verdient\http\parser\ResponseParserInterface;
+use Verdient\http\exception\InvalidConfigException;
+use Verdient\http\parser\JsonParser;
+use Verdient\http\parser\ParserInterface;
+use Verdient\http\parser\UrlencodedParser;
+use Verdient\http\parser\XmlParser;
 
 /**
  * 响应
  * @author Verdient。
  */
-class Response extends BaseObject
+class Response
 {
     /**
      * @var array 内建解析器
      * @author Verdient。
      */
     const BUILT_IN_PARSERS = [
-        'application/json' => 'Verdient\http\parser\JsonParser',
-        'application/x-www-form-urlencoded' => 'Verdient\http\parser\UrlencodedParser',
-        'application/xml' => 'Verdient\http\parser\XmlParser',
+        'application/json' => JsonParser::class,
+        'application/x-www-form-urlencoded' => UrlencodedParser::class,
+        'application/xml' => XmlParser::class,
     ];
-
-    /**
-     * @var bool 是否尝试解析
-     * @author Verdient。
-     */
-    public $tryParse = true;
 
     /**
      * @var Request 请求对象
      * @author Verdient。
      */
-    public $request;
-
-    /**
-     * @var array 解析器
-     * @author Verdient。
-     */
-    public $parsers = [];
+    protected $request;
 
     /**
      * @var int 状态码
@@ -106,8 +96,9 @@ class Response extends BaseObject
      * @inheritdoc
      * @author Verdient。
      */
-    public function __construct($status, $headers, $content, $response)
+    public function __construct(Request $request, $status, $headers, $content, $response)
     {
+        $this->request = $request;
         $position = strrpos($status, "\r\n\r\n");
         if ($position !== false) {
             $status = mb_substr($status, $position + 4);
@@ -124,30 +115,51 @@ class Response extends BaseObject
     }
 
     /**
-     * 获取解析器
-     * @param string $name 名称
-     * @param string $charset 字符集
-     * @return ResponseParserInterface|false
+     * 获取请求对象
+     * @return Request
      * @author Verdient。
      */
-    protected function getParser($name, $charset = null)
+    public function getRequest(): Request
     {
-        if ($name) {
-            foreach ([$this->parsers, static::BUILT_IN_PARSERS] as $parsers) {
-                $parser = $parsers[strtolower($name)] ?? null;
-                if ($parser) {
-                    $parser = ObjectHelper::create($parser);
-                    if (!$parser instanceof ResponseParserInterface) {
-                        throw new \Exception('parser must implements ' . ResponseParserInterface::class);
-                    }
-                    if (!empty($charset)) {
-                        $parser->charset = $charset;
-                    }
-                    return $parser;
+        return $this->request;
+    }
+
+    /**
+     * 获取解析器
+     * @param string $contentType 消息体类型
+     * @param string $charset 字符集
+     * @return ParserInterface[]
+     * @author Verdient。
+     */
+    protected function getParsers($contentType, $charset = null)
+    {
+        if ($this->request->getParser() !== 'auto') {
+            $parsers = [$this->request->getParser()];
+        } else if (isset(static::BUILT_IN_PARSERS[$contentType])) {
+            $parsers = [static::BUILT_IN_PARSERS[$contentType]];
+            foreach (static::BUILT_IN_PARSERS as $key => $parser) {
+                if ($key != $contentType) {
+                    $parsers[] = $parser;
                 }
             }
+        } else {
+            $parsers = static::BUILT_IN_PARSERS;
         }
-        return false;
+        var_dump($parsers);
+        foreach ($parsers as $parser) {
+            if (!class_exists($parser)) {
+                throw new InvalidConfigException('Unknown Parser: ' . $parser);
+            }
+            if (!array_key_exists(ParserInterface::class, class_implements($parser))) {
+                throw new InvalidConfigException('Parser must implements ' . ParserInterface::class);
+            }
+            $parser = new $parser;
+            if (!empty($charset)) {
+                $parser->charset = $charset;
+            }
+            var_dump(1);
+            yield $parser;
+        }
     }
 
     /**
@@ -189,37 +201,25 @@ class Response extends BaseObject
     {
         if ($this->body === false) {
             $this->body = null;
-            if ($this->rawContent) {
-                $this->body = $this->rawContent;
-                $content = $this->rawContent;
-                if (ord(substr($content, 0, 1)) === 239 && ord(substr($content, 1, 1)) === 187 && ord(substr($content, 2, 1)) === 191) {
-                    $content = substr($content, 3);
+            if (!$this->rawContent) {
+                return $this->body;
+            }
+            $this->body = $this->rawContent;
+            $content = $this->rawContent;
+            if (ord(substr($content, 0, 1)) === 239 && ord(substr($content, 1, 1)) === 187 && ord(substr($content, 2, 1)) === 191) {
+                $content = substr($content, 3);
+            }
+            foreach ($this->getParsers($this->getContentType(), $this->getCharset()) as $parser) {
+                if (!$parser->can($content)) {
+                    continue;
                 }
-                $parsed = false;
-                $parser = $this->getParser($this->getContentType(), $this->getCharset());
-                if ($parser) {
+                try {
                     $body = $parser->parse($content);
                     if ($body !== false) {
-                        $parsed = true;
                         $this->body = $body;
+                        break;
                     }
-                }
-                if (!$parsed && $this->tryParse === true) {
-                    foreach ([$this->parsers, static::BUILT_IN_PARSERS] as $parsers) {
-                        foreach (array_keys($parsers) as $name) {
-                            $parser = $this->getParser($name);
-                            if ($parser->can($content)) {
-                                try {
-                                    $body = $parser->parse($content);
-                                    if ($body) {
-                                        $this->body = $parser->parse($content);
-                                        break;
-                                    }
-                                } catch (\Throwable $e) {
-                                }
-                            }
-                        }
-                    }
+                } catch (\Throwable $e) {
                 }
             }
         }
@@ -235,23 +235,26 @@ class Response extends BaseObject
     {
         if ($this->headers === false) {
             $this->headers = null;
-            if ($this->rawHeaders) {
-                $this->headers = [];
-                $headers = explode("\r\n", $this->rawHeaders);
-                foreach ($headers as $header) {
-                    if ($header) {
-                        $header = explode(': ', $header);
-                        if (isset($header[1])) {
-                            if (isset($this->headers[$header[0]])) {
-                                if (!is_array($this->headers[$header[0]])) {
-                                    $this->headers[$header[0]] = [$this->headers[$header[0]]];
-                                }
-                                $this->headers[$header[0]][] = $header[1];
-                            } else {
-                                $this->headers[$header[0]] = $header[1];
-                            }
-                        }
+            if (!$this->rawHeaders) {
+                return $this->headers;
+            }
+            $this->headers = [];
+            $headers = explode("\r\n", $this->rawHeaders);
+            foreach ($headers as $header) {
+                if (!$header) {
+                    continue;
+                }
+                $header = explode(': ', $header);
+                if (!isset($header[1])) {
+                    continue;
+                }
+                if (isset($this->headers[$header[0]])) {
+                    if (!is_array($this->headers[$header[0]])) {
+                        $this->headers[$header[0]] = [$this->headers[$header[0]]];
                     }
+                    $this->headers[$header[0]][] = $header[1];
+                } else {
+                    $this->headers[$header[0]] = $header[1];
                 }
             }
         }

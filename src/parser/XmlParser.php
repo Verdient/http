@@ -6,7 +6,7 @@ namespace Verdient\http\parser;
  * Xml解析器
  * @author Verdient。
  */
-class XmlParser extends ResponseParser
+class XmlParser extends AbstractParser
 {
     /**
      * @var int 参数

@@ -4,100 +4,52 @@ declare(strict_types=1);
 
 namespace Verdient\http;
 
-use chorus\BaseObject;
-use chorus\Configurable;
-use chorus\HasEvent;
-use chorus\InvalidConfigException;
-use chorus\InvalidParamException;
-use chorus\ObjectHelper;
 use Verdient\http\builder\BuilderInterface;
+use Verdient\http\exception\InvalidConfigException;
+use Verdient\http\exception\InvalidParamException;
+use Verdient\http\serializer\body\BodySerializerInterface;
+use Verdient\http\serializer\body\JsonBodySerializer;
+use Verdient\http\serializer\query\RFC1738Serializer;
+use Verdient\http\serializer\SerializerInterface;
+use Verdient\http\traits\Configurable;
+use Verdient\http\transport\CoroutineTransport;
+use Verdient\http\transport\CUrlTransport;
 use Verdient\http\transport\TransportInterface;
 
 /**
  * 请求
  * @author Verdient。
  */
-class Request extends BaseObject
+class Request
 {
     use Configurable;
-    use HasEvent;
 
     /**
-     * @var string 准备前事件
+     * @var string 消息体序列化器
      * @author Verdient。
      */
-    const EVENT_BEFORE_PREPARE = 'beforePrepare';
+    protected $bodySerializer = JsonBodySerializer::class;
 
     /**
-     * @var string 请求前事件
+     * @var string 查询参数序列化器
      * @author Verdient。
      */
-    const EVENT_BEFORE_REQUEST = 'beforeRequest';
-
-    /**
-     * @var string 请求后事件
-     * @author Verdient。
-     */
-    const EVENT_AFTER_REQUEST = 'afterRequest';
-
-    /**
-     * @var array 内建构造器
-     * @author Verdient。
-     */
-    const BUILT_IN_BUILDERS = [
-        'json' => 'Verdient\http\builder\JsonBuilder',
-        'urlencoded' => 'Verdient\http\builder\UrlencodedBuilder',
-        'xml' => 'Verdient\http\builder\XmlBuilder'
-    ];
-
-    /**
-     * @var array 内建传输通道
-     * @author Verdient。
-     */
-    const BUILT_IN_TRANSPORTS = [
-        'cUrl' => 'Verdient\http\transport\CUrlTransport',
-        'coroutine' => 'Verdient\http\transport\CoroutineTransport',
-        'stream' => 'Verdient\http\transport\StreamTransport'
-    ];
-
-    /**
-     * @var array 构建器
-     * @author Verdient。
-     */
-    public $builders = [];
-
-    /**
-     * @var array 解析器
-     * @author Verdient。
-     */
-    public $parsers = [];
-
-    /**
-     * @var array 传输通道
-     * @author Verdient。
-     */
-    public $transports = [];
-
-    /**
-     * @var string|callback 消息体序列化器
-     * @author Verdient。
-     */
-    public $bodySerializer = 'json';
+    protected $querySerializer = RFC1738Serializer::class;
 
     /**
      * @var string 传输通道
      * @author Verdient。
      */
-    public $transport = 'cUrl';
+    protected $transport = 'auto';
 
     /**
-     * @var bool 是否尝试解析
+     * @var string 解析器
      * @author Verdient。
      */
-    public $tryParse = true;
+    protected $parser = 'auto';
 
     /**
-     * @var string 请求地址
+     * @var string|null 请求地址
      * @author Verdient。
      */
     protected $url = null;
@@ -118,19 +70,19 @@ class Request extends BaseObject
      * @var array 查询参数
      * @author Verdient。
      */
-    protected $query = [];
+    protected $queries = [];
 
     /**
      * @var array 消息体参数
      * @author Verdient。
      */
-    protected $body = [];
+    protected $bodies = [];
 
     /**
-     * @var string 消息体
+     * @var string|null 消息体
      * @author Verdient。
      */
-    protected $content = '';
+    protected $content = null;
 
     /**
      * @var string 代理地址
@@ -151,13 +103,46 @@ class Request extends BaseObject
     protected $timeout = 15;
 
     /**
-     * @inheritdoc
+     * @var string|null 协议
      * @author Verdient。
      */
-    public function __construct($config = [])
-    {
-        $this->configuration($config);
-    }
+    protected $scheme = null;
+
+    /**
+     * @var string|null 主机
+     * @author Verdient。
+     */
+    protected $host = null;
+
+    /**
+     * @var int|null 主机
+     * @author Verdient。
+     */
+    protected $port = null;
+
+    /**
+     * @var string|null 用户
+     * @author Verdient。
+     */
+    protected $user = null;
+
+    /**
+     * @var string|null 密码
+     * @author Verdient。
+     */
+    protected $pass = null;
+
+    /**
+     * @var string|null 路径
+     * @author Verdient。
+     */
+    protected $path = null;
+
+    /**
+     * @var string|null 片段
+     * @author Verdient。
+     */
+    protected $fragment = null;
 
     /**
      * 响应类
@@ -169,24 +154,22 @@ class Request extends BaseObject
     }
 
     /**
-     * 获取构建器
-     * @param string $builder 构建器
-     * @return BuilderInterface
+     * 设置传输通道
+     * @param $name 通道名称
+     * @return TransportInterface
      * @author Verdient。
      */
-    public function getBuilder($name)
+    public function setTransport(string $transport)
     {
-        foreach ([$this->builders, static::BUILT_IN_BUILDERS] as $builders) {
-            $builder = $builders[strtolower($name)] ?? null;
-            if ($builder) {
-                $builder = ObjectHelper::create($builder);
-                if (!$builder instanceof BuilderInterface) {
-                    throw new InvalidConfigException('builder must instance of ' . BuilderInterface::class);
-                }
-                return $builder;
+        if ($transport !== 'auto') {
+            if (!class_exists($transport)) {
+                throw new InvalidConfigException('Unknown transport: ' . $transport);
+            }
+            if (!array_key_exists(TransportInterface::class, class_implements($transport))) {
+                throw new InvalidConfigException('Transport must implements ' . TransportInterface::class);
             }
         }
-        throw new InvalidParamException('Unknown builder: ' . $name);
+        $this->transport = $transport;
     }
 
     /**
@@ -195,28 +178,100 @@ class Request extends BaseObject
      * @return TransportInterface
      * @author Verdient。
      */
-    public function getTransport()
+    protected function getTransport(): TransportInterface
     {
-        foreach ([$this->transports, static::BUILT_IN_TRANSPORTS] as $transports) {
-            if (isset($transports[$this->transport])) {
-                $transport = ObjectHelper::create($transports[$this->transport]);
-                if (!$transport instanceof TransportInterface) {
-                    throw new InvalidConfigException('transport must instance of ' . TransportInterface::class);
-                }
-                return $transport;
+        if ($this->transport === 'auto') {
+            if (extension_loaded('swoole')) {
+                return new CoroutineTransport;
+            } else {
+                return new CUrlTransport;
             }
         }
-        throw new InvalidConfigException('Unknown transport: ' . $this->transport);
+        $class = $this->transport;
+        return new $class;
     }
 
     /**
-     * 获取URL地址
+     * 设置消息体序列化器
+     * @param string $serializer 序列化器
      * @return string
      * @author Verdient。
      */
-    public function getUrl()
+    public function setBodySerializer($serializer)
     {
-        return $this->url;
+        if (!class_exists($serializer)) {
+            throw new InvalidConfigException('Unknown body serializer: ' . $serializer);
+        }
+        if (!array_key_exists(BodySerializerInterface::class, class_implements($serializer))) {
+            throw new InvalidConfigException('Body serializer must implements ' . BodySerializerInterface::class);
+        }
+        $this->bodySerializer = $serializer;
+    }
+
+    /**
+     * 获取消息体序列化器
+     * @return string
+     * @author Verdient。
+     */
+    public function getBodySerializer(): string
+    {
+        return $this->bodySerializer;
+    }
+
+    /**
+     * 设置查询参数序列化器
+     * @param string $serializer 解析器
+     * @return string
+     * @author Verdient。
+     */
+    public function setQuerySerializer($serializer)
+    {
+        if (!class_exists($serializer)) {
+            throw new InvalidConfigException('Unknown query serializer: ' . $serializer);
+        }
+        if (!array_key_exists(SerializerInterface::class, class_implements($serializer))) {
+            throw new InvalidConfigException('Query serializer must implements ' . SerializerInterface::class);
+        }
+        $this->querySerializer = $serializer;
+    }
+
+    /**
+     * 获取查询参数序列化器
+     * @return string
+     * @author Verdient。
+     */
+    public function getQuerySerializer(): string
+    {
+        return $this->querySerializer;
+    }
+
+    /**
+     * 设置解析器
+     * @param string $parser 解析器
+     * @return string
+     * @author Verdient。
+     */
+    public function setParser($parser)
+    {
+        if ($parser !== 'auto') {
+            if (!class_exists($parser)) {
+                throw new InvalidConfigException('Unknown parser: ' . $parser);
+            }
+            if (!array_key_exists(ParserInterface::class, class_implements($parser))) {
+                throw new InvalidConfigException('Parser must implements ' . ParserInterface::class);
+            }
+        }
+        $this->parser = $parser;
+    }
+
+    /**
+     * 获取解析器
+     * @return string
+     * @author Verdient。
+     */
+    public function getParser(): string
+    {
+        return $this->parser;
     }
 
     /**
@@ -227,18 +282,76 @@ class Request extends BaseObject
      */
     public function setUrl($url)
     {
-        $this->url = $url;
+        $this->url = null;
+        $components = parse_url($url);
+        if (!isset($components['scheme']) || !isset($components['host'])) {
+            throw new InvalidParamException('Url is not a valid url');
+        }
+        $this->scheme = $components['scheme'];
+        $this->host = $components['host'];
+        $this->port = $components['port'] ?? null;
+        $this->user = $components['user'] ?? null;
+        $this->pass = $components['pass'] ?? null;
+        $this->fragment = $components['fragment'] ?? null;
+        if (isset($components['query'])) {
+            $params = [];
+            parse_str($components['query'], $params);
+            foreach ($params as $name => $value) {
+                $this->addQuery($name, $value);
+            }
+        }
         return $this;
     }
 
     /**
-     * 获取头部参数
-     * @return array
+     * 获取URL地址
+     * @return string
      * @author Verdient。
      */
-    public function getHeaders()
+    public function getUrl(): string
     {
-        return $this->headers;
+        if ($this->url === null) {
+            $url = 'scheme://auth@host:port/path?query#fragment';
+            $auth = '';
+            if ($this->user) {
+                if ($this->pass) {
+                    $auth = $this->user . ':' . $this->pass;
+                } else {
+                    $auth = $this->user;
+                }
+            }
+            $port = $this->port;
+            if ($this->scheme == 'http' && $port == 80) {
+                $port = null;
+            }
+            if ($this->scheme == 'https' && $port == 443) {
+                $port = null;
+            }
+            $query = null;
+            if (!empty($this->queries)) {
+                if (!class_exists($this->querySerializer)) {
+                    throw new InvalidConfigException('Unknown query serializer: ' . $this->querySerializer);
+                }
+                if (!array_key_exists(SerializerInterface::class, class_implements($this->querySerializer))) {
+                    throw new InvalidConfigException('Query serializer must implements ' . SerializerInterface::class);
+                }
+                $class = $this->querySerializer;
+                $query = $class::serialize($this->queries);
+            }
+            foreach ([
+                'scheme://' => $this->scheme ? ($this->scheme . '://') : '',
+                'auth@' => $auth ? ($auth . '@') : '',
+                'host' => $this->host ?: '',
+                ':port' => ($port ? ':' . $port : ''),
+                '/path' => $this->path ? ('/' . $this->path) : '',
+                '?query' => $query ? ('?' . $query) : '',
+                '#fragment' => $this->fragment ? '#' . $this->fragment : ''
+            ] as $name => $value) {
+                $url = str_replace($name, $value, $url);
+            }
+            $this->url = $url;
+        }
+        return $this->url;
     }
 
     /**
@@ -251,6 +364,24 @@ class Request extends BaseObject
     {
         $this->headers = $headers;
         return $this;
+    }
+
+    /**
+     * 获取头部参数
+     * @return array
+     * @author Verdient。
+     */
+    public function getHeaders(): array
+    {
+        if (!in_array($this->getMethod(), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+            return $this->headers;
+        }
+        if (!empty($this->bodies)) {
+            $class = $this->bodySerializer;
+            $headers = array_merge($this->headers, $class::headers($this->bodies));
+        }
+        $headers['Content-Length'] = strlen($this->getContent());
+        return $headers;
     }
 
     /**
@@ -267,17 +398,15 @@ class Request extends BaseObject
     }
 
     /**
-     * 过滤后将内容添加到头部信息中
-     * @param string $key 名称
-     * @param string $value 内容
+     * 设置查询信息
+     * @param array $queries 查询信息
      * @return static
      * @author Verdient。
      */
-    public function addFilterHeader($key, $value)
+    public function setQuery(array $queries)
     {
-        if (!empty($value)) {
-            return $this->addHeader($key, $value);
-        }
+        $this->url = null;
+        $this->queries = $queries;
         return $this;
     }
 
@@ -286,21 +415,9 @@ class Request extends BaseObject
      * @return array
      * @author Verdient。
      */
-    public function getQuery()
+    public function getQuery(): array
     {
-        return $this->query;
-    }
-
-    /**
-     * 设置查询信息
-     * @param array $query 查询信息
-     * @return static
-     * @author Verdient。
-     */
-    public function setQuery(array $query)
-    {
-        $this->query = $query;
-        return $this;
+        return $this->queries;
     }
 
     /**
@@ -312,22 +429,27 @@ class Request extends BaseObject
      */
     public function addQuery($name, $value)
     {
-        $this->query[$name] = $value;
+        $this->url = null;
+        $this->queries[$name] = $value;
         return $this;
     }
 
     /**
-     * 过滤后将内容添加到查询参数中
-     * @param string $key 名称
-     * @param string $value 内容
+     * 设置消息体参数
+     * @param array|BuilderInterface $bodies 消息体
      * @return static
      * @author Verdient。
      */
-    public function addFilterQuery($key, $value)
+    public function setBody($bodies)
     {
-        if (!empty($value)) {
-            return $this->addQuery($key, $value);
+        $this->content = null;
+        if (is_object($bodies)) {
+            if (!$bodies instanceof BuilderInterface) {
+                throw new InvalidParamException('Body must implements ' . BuilderInterface::class);
+            }
+            $this->setBodySerializer($bodies->serializer());
         }
+        $this->bodies = $bodies;
         return $this;
     }
 
@@ -336,21 +458,9 @@ class Request extends BaseObject
      * @return array
      * @author Verdient。
      */
-    public function getBody()
+    public function getBody(): array
     {
-        return $this->body;
-    }
-
-    /**
-     * 设置消息体参数
-     * @param array $body 消息体
-     * @return static
-     * @author Verdient。
-     */
-    public function setBody(array $body)
-    {
-        $this->body = $body;
-        return $this;
+        return $this->bodies;
     }
 
     /**
@@ -362,22 +472,21 @@ class Request extends BaseObject
      */
     public function addBody($name, $value)
     {
-        $this->body[$name] = $value;
+        $this->content = null;
+        $this->bodies[$name] = $value;
         return $this;
     }
 
     /**
-     * 过滤后将内容添加到消息体中
-     * @param string $key 名称
-     * @param mixed $value 内容
+     * 设置消息体
+     * @param string $data 发送的数据
      * @return static
      * @author Verdient。
      */
-    public function addFilterBody($key, $value)
+    public function setContent(string $data)
     {
-        if (!empty($value)) {
-            return $this->addBody($key, $value);
-        }
+        $this->bodies = [];
+        $this->content = $data;
         return $this;
     }
 
@@ -386,22 +495,21 @@ class Request extends BaseObject
      * @return string
      * @author Verdient。
      */
-    public function getContent()
+    public function getContent(): string
     {
+        if ($this->content === null) {
+            $this->content = '';
+            if (empty($this->bodies)) {
+                return $this->content;
+            }
+            $class = $this->bodySerializer;
+            $content = $class::serialize($this->bodies);
+            if (!is_string($content)) {
+                throw new InvalidParamException('Body is unserializable');
+            }
+            $this->content = $content;
+        }
         return $this->content;
-    }
-
-    /**
-     * 设置消息体
-     * @param string|array|BuilderInterface $data 发送的数据
-     * @param string|callback $serializer 序列化器
-     * @return static
-     * @author Verdient。
-     */
-    public function setContent($data, $serializer = null)
-    {
-        $this->content = $this->normalizeContent($data, $serializer);
-        return $this;
     }
 
     /**
@@ -439,16 +547,6 @@ class Request extends BaseObject
     }
 
     /**
-     * 获取请求方法
-     * @return string
-     * @author Verdient。
-     */
-    public function getMethod()
-    {
-        return $this->method;
-    }
-
-    /**
      * 设置请求方法
      * @param string $method 请求方法
      * @return static
@@ -461,56 +559,35 @@ class Request extends BaseObject
     }
 
     /**
-     * 获取超时时间
-     * @return int
+     * 获取请求方法
+     * @return string
      * @author Verdient。
      */
-    public function getTimeout()
+    public function getMethod(): string
     {
-        return $this->timeout;
+        return $this->method;
     }
 
     /**
      * 设置超时时间
-     * @param string $timeout 超时时间
+     * @param int $timeout 超时时间
      * @return static
      * @author Verdient。
      */
-    public function setTimeout($timeout)
+    public function setTimeout(int $timeout)
     {
         $this->timeout = $timeout;
         return $this;
     }
 
     /**
-     * 重置
-     * @return static
+     * 获取超时时间
+     * @return int
      * @author Verdient。
      */
-    public function reset()
+    public function getTimeout(): int
     {
-        $this->url = null;
-        $this->method = 'GET';
-        $this->headers = [];
-        $this->query = [];
-        $this->body = [];
-        $this->content = null;
-        $this->proxyHost = null;
-        $this->proxyPort = null;
-        $this->timeout = 15;
-        return $this;
-    }
-
-    /**
-     * 请求
-     * @param string $method 请求方式
-     * @return Response|string
-     * @author Verdient。
-     */
-    public function request($method)
-    {
-        $this->setMethod($method);
-        return $this->send();
+        return $this->timeout;
     }
 
     /**
@@ -520,96 +597,10 @@ class Request extends BaseObject
      */
     public function send()
     {
-        $this->trigger(static::EVENT_BEFORE_PREPARE, $this);
-        $this->prepare();
-        $this->trigger(static::EVENT_BEFORE_REQUEST, $this);
-        list($statusCode, $headers, $content, $response) = $this->getTransport()->send($this);
-        $result = ObjectHelper::create([
-            'class' => static::responseClass(),
-            'request' => $this,
-            'tryParse' => $this->tryParse,
-            'parsers' => $this->parsers
-        ], $statusCode, $headers, $content, $response);
-        $this->trigger(static::EVENT_AFTER_REQUEST, $this, $result);
-        return $result;
-    }
-
-    /**
-     * 准备请求
-     * @return static
-     * @author Verdient。
-     */
-    public function prepare()
-    {
-        $this->url = $this->normalizeUrl($this->url);
-        if (in_array($this->method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
-            if (empty($this->content) && !empty($this->body)) {
-                $this->content = $this->normalizeContent($this->body, $this->bodySerializer);
-            }
-            $this->addHeader('Content-Length', strlen($this->content));
-        }
-        return $this;
-    }
-
-    /**
-     * 格式化URL
-     * @param string $url URL地址
-     * @return string
-     * @author Verdient。
-     */
-    public function normalizeUrl($url)
-    {
-        $url = parse_url($url);
-        foreach (['scheme', 'host'] as $name) {
-            if (!isset($url[$name])) {
-                throw new InvalidParamException('Url is not a valid url');
-            }
-        }
-        $query = [];
-        if (isset($url['query'])) {
-            parse_str($url['query'], $query);
-        }
-        if (!empty($this->query)) {
-            $query = array_merge($query, $this->query);
-        }
-        $url = $url['scheme'] . '://' .
-            (isset($url['user']) ? $url['user'] : '') .
-            (isset($url['pass']) ? ((isset($url['user']) ? ':' : '') . $url['pass']) : '') .
-            ((isset($url['pass']) || isset($url['pass'])) ? '@' : '') .
-            $url['host'] .
-            (isset($url['port']) ? ':' . $url['port'] : '') .
-            (isset($url['path']) ? $url['path'] : '') .
-            (!empty($query) ? ('?' . http_build_query($query)) : '') .
-            (isset($url['fragment']) ? ('#' . $url['fragment']) : '');
-        return $url;
-    }
-
-    /**
-     * 格式化消息体
-     * @param string|array|BuilderInterface $data 发送的数据
-     * @param string|callback $serializer 序列化器
-     * @throws Exception
-     * @return string
-     * @author Verdient。
-     */
-    public function normalizeContent($data, $serializer = null)
-    {
-        if (is_callable($serializer)) {
-            $data = call_user_func($serializer, $data);
-        } else if (is_string($serializer) && !empty($serializer) && is_array($data)) {
-            $builder = $this->getBuilder($serializer);
-            $builder->setElements($data);
-            $data = $builder;
-        }
-        if ($data instanceof BuilderInterface) {
-            foreach ($data->headers() as $name => $value) {
-                $this->addHeader($name, $value);
-            }
-            $data = $data->toString();
-        }
-        if (!is_string($data)) {
-            throw new InvalidParamException('content must be a string');
-        }
-        return $data;
+        list($statusCode, $headers, $content, $response) = $this
+            ->getTransport()
+            ->send($this);
+        $class = static::responseClass();
+        return new $class($this, $statusCode, $headers, $content, $response);
     }
 }
