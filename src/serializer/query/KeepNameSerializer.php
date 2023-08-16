@@ -42,8 +42,9 @@ class KeepNameSerializer implements SerializerInterface
             } else {
                 if (empty($prefixs)) {
                     $results[] = $name2 . '=' . urlencode($value);
+                } else {
+                    $results[] .= implode('', $prefixs) . '[' . $name2 . ']' . '=' . urlencode($value);
                 }
-                $results[] .= implode('', $prefixs) . '[' . $name2 . ']'  . '=' . urlencode($value);
             }
         }
         return implode('&', $results);

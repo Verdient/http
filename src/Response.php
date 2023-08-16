@@ -145,7 +145,6 @@ class Response
         } else {
             $parsers = static::BUILT_IN_PARSERS;
         }
-        var_dump($parsers);
         foreach ($parsers as $parser) {
             if (!class_exists($parser)) {
                 throw new InvalidConfigException('Unknown Parser: ' . $parser);
@@ -157,7 +156,6 @@ class Response
             if (!empty($charset)) {
                 $parser->charset = $charset;
             }
-            var_dump(1);
             yield $parser;
         }
     }

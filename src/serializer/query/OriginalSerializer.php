@@ -42,8 +42,9 @@ class OriginalSerializer implements SerializerInterface
             } else {
                 if (empty($prefixs)) {
                     $results[] = $name2 . '=' . $value;
+                } else {
+                    $results[] .= implode('', $prefixs) . '[' . $name2 . ']' . '=' . $value;
                 }
-                $results[] .= implode('', $prefixs) . '[' . $name2 . ']'  . '=' . $value;
             }
         }
         return implode('&', $results);
