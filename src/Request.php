@@ -380,6 +380,7 @@ class Request
         if (!in_array($this->getMethod(), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
             return $this->headers;
         }
+        $headers = $this->headers;
         if (!empty($this->bodies)) {
             $class = $this->bodySerializer;
             $headers = array_merge($this->headers, $class::headers($this->bodies));
