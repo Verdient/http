@@ -181,7 +181,7 @@ class Request
     protected function getTransport(): TransportInterface
     {
         if ($this->transport === 'auto') {
-            if (extension_loaded('swoole')) {
+            if (extension_loaded('swoole') && PHP_SAPI === 'cli') {
                 return new CoroutineTransport;
             } else {
                 return new CUrlTransport;
