@@ -7,6 +7,7 @@ namespace Verdient\http;
 use Verdient\http\builder\BuilderInterface;
 use Verdient\http\exception\InvalidConfigException;
 use Verdient\http\exception\InvalidParamException;
+use Verdient\http\parser\ParserInterface;
 use Verdient\http\serializer\body\BodySerializerInterface;
 use Verdient\http\serializer\body\JsonBodySerializer;
 use Verdient\http\serializer\query\RFC1738Serializer;
