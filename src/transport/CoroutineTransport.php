@@ -45,7 +45,11 @@ class CoroutineTransport extends AbstractTransport
         $options['method'] = $request->getMethod();
         $options['timeout'] = $request->getTimeout();
         $options['host'] = $url['host'];
-        $options['headers']['Host'] = $url['host'];
+        $host = $url['host'];
+        if (!empty($url['port'])) {
+            $host .= ':' . $url['port'];
+        }
+        $options['headers']['Host'] = $host;
         if ($request->getProxyHost()) {
             $options['proxyHost'] = $request->getProxyHost();
         }
