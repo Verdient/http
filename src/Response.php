@@ -2,22 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Verdient\http;
+namespace Verdient\Http;
 
-use Verdient\http\exception\InvalidConfigException;
-use Verdient\http\parser\JsonParser;
-use Verdient\http\parser\ParserInterface;
-use Verdient\http\parser\UrlencodedParser;
-use Verdient\http\parser\XmlParser;
+use Iterator;
+use Verdient\Http\Parser\JsonParser;
+use Verdient\Http\Parser\ParserInterface;
+use Verdient\Http\Parser\UrlencodedParser;
+use Verdient\Http\Parser\XmlParser;
+use Verdient\Http\Transport\Result;
 
 /**
  * 响应
+ *
  * @author Verdient。
  */
-class Response
+class Response implements ResponseInterface
 {
     /**
-     * @var array 内建解析器
+     * 内建解析器
+     *
      * @author Verdient。
      */
     const BUILT_IN_PARSERS = [
@@ -27,96 +30,122 @@ class Response
     ];
 
     /**
-     * @var Request 请求对象
+     * 请求对象
+     *
      * @author Verdient。
      */
-    protected $request;
+    protected Request $request;
 
     /**
-     * @var int 状态码
+     * 状态码
+     *
      * @author Verdient。
      */
-    protected $statusCode = null;
+    protected int $statusCode;
 
     /**
-     * @var string 状态消息
+     * 状态消息
+     *
      * @author Verdient。
      */
-    protected $statusMessage = null;
+    protected string $statusMessage;
 
     /**
-     * @var string HTTP版本
+     * HTTP版本
+     *
      * @author Verdient。
      */
-    protected $httpVersion = null;
+    protected string $httpVersion;
 
     /**
-     * @var string 原始响应
+     * 原始响应
+     *
      * @author Verdient。
      */
-    protected $rawReponse = null;
+    protected string $rawReponse;
 
     /**
-     * @var string 原始头部
+     * 原始状态行
+     *
      * @author Verdient。
      */
-    protected $rawHeaders = null;
+    protected string $rawStatus;
 
     /**
-     * @var string 原始消息体
+     * 原始头部
+     *
      * @author Verdient。
      */
-    protected $rawContent = null;
+    protected string $rawHeaders;
 
     /**
-     * @var mixed 消息体
+     * 原始消息体
+     *
      * @author Verdient。
      */
-    protected $body = false;
+    protected ?string $rawContent;
 
     /**
-     * @var array 头部信息
+     * 头部数据
+     *
      * @author Verdient。
      */
-    protected $headers = false;
+    protected array|null $headers = null;
 
     /**
-     * @var string 消息体类型
+     * Cookie数据
+     *
      * @author Verdient。
      */
-    protected $contentType = false;
+    protected array|null $cookies = null;
 
     /**
-     * @var string 字符集
+     * 消息体
+     *
      * @author Verdient。
      */
-    protected $charset = false;
+    protected mixed $bodies = false;
+
+    /**
+     * 消息体类型
+     *
+     * @author Verdient。
+     */
+    protected string|null|false $contentType = false;
+
+    /**
+     * 字符集
+     *
+     * @author Verdient。
+     */
+    protected string|null|false $charset = false;
 
     /**
      * @inheritdoc
      * @author Verdient。
      */
-    public function __construct(Request $request, $status, $headers, $content, $response)
+    public function __construct(Request $request, Result $result)
     {
         $this->request = $request;
-        $position = strrpos($status, "\r\n\r\n");
-        if ($position !== false) {
-            $status = mb_substr($status, $position + 4);
-        }
+
+        $status = $result->status;
+
         $status = explode(' ', $status);
+
         if (count($status) > 2) {
             $this->httpVersion = array_shift($status);
             $this->statusCode = (int) array_shift($status);
             $this->statusMessage = implode(' ', $status);
         }
-        $this->rawHeaders = $headers;
-        $this->rawContent = $content;
-        $this->rawReponse = $response;
+
+        $this->rawStatus = $result->status;
+        $this->rawHeaders = $result->headers;
+        $this->rawContent = $result->content;
+        $this->rawReponse = $result->response;
     }
 
     /**
-     * 获取请求对象
-     * @return Request
+     * @inheritdoc
      * @author Verdient。
      */
     public function getRequest(): Request
@@ -125,170 +154,232 @@ class Response
     }
 
     /**
-     * 获取解析器
-     * @param string $contentType 消息体类型
-     * @param string $charset 字符集
-     * @return ParserInterface[]
+     * @inheritdoc
      * @author Verdient。
      */
-    protected function getParsers($contentType, $charset = null)
-    {
-        if ($this->request->getParser() !== 'auto') {
-            $parsers = [$this->request->getParser()];
-        } else if (isset(static::BUILT_IN_PARSERS[$contentType])) {
-            $parsers = [static::BUILT_IN_PARSERS[$contentType]];
-            foreach (static::BUILT_IN_PARSERS as $key => $parser) {
-                if ($key != $contentType) {
-                    $parsers[] = $parser;
-                }
-            }
-        } else {
-            $parsers = static::BUILT_IN_PARSERS;
-        }
-        foreach ($parsers as $parser) {
-            if (!class_exists($parser)) {
-                throw new InvalidConfigException('Unknown Parser: ' . $parser);
-            }
-            if (!array_key_exists(ParserInterface::class, class_implements($parser))) {
-                throw new InvalidConfigException('Parser must implements ' . ParserInterface::class);
-            }
-            $parser = new $parser;
-            if (!empty($charset)) {
-                $parser->charset = $charset;
-            }
-            yield $parser;
-        }
-    }
-
-    /**
-     * 获取响应
-     * @return string
-     * @author Verdient。
-     */
-    public function getRawResponse()
+    public function getRawResponse(): string
     {
         return $this->rawReponse;
     }
 
     /**
-     * 获取消息体
-     * @return string
+     * @inheritdoc
      * @author Verdient。
      */
-    public function getRawContent()
+    public function getRawStatus(): string
     {
-        return $this->rawContent;
+        return $this->rawStatus;
     }
 
     /**
-     * 获取原始头部
-     * @return string
+     * @inheritdoc
      * @author Verdient。
      */
-    public function getRawHeaders()
+    public function getRawHeaders(): string
     {
         return $this->rawHeaders;
     }
 
     /**
-     * 获取消息体
-     * @return array|string|null
+     * @inheritdoc
      * @author Verdient。
      */
-    public function getBody()
+    public function getRawContent(): ?string
     {
-        if ($this->body === false) {
-            $this->body = null;
-            if (!$this->rawContent) {
-                return $this->body;
-            }
-            $this->body = $this->rawContent;
-            $content = $this->rawContent;
-            if (ord(substr($content, 0, 1)) === 239 && ord(substr($content, 1, 1)) === 187 && ord(substr($content, 2, 1)) === 191) {
-                $content = substr($content, 3);
-            }
-            foreach ($this->getParsers($this->getContentType(), $this->getCharset()) as $parser) {
-                if (!$parser->can($content)) {
-                    continue;
-                }
-                try {
-                    $body = $parser->parse($content);
-                    if ($body !== false) {
-                        $this->body = $body;
-                        break;
-                    }
-                } catch (\Throwable $e) {
-                }
-            }
-        }
-        return $this->body;
+        return $this->rawContent;
     }
 
     /**
-     * 获取头部
-     * @return array|null
+     * @inheritdoc
      * @author Verdient。
      */
-    public function getHeaders()
+    public function getHttpVersion(): string
     {
-        if ($this->headers === false) {
-            $this->headers = null;
-            if (!$this->rawHeaders) {
-                return $this->headers;
-            }
+        return $this->httpVersion;
+    }
+
+    /**
+     * @inheritdoc
+     * @author Verdient。
+     */
+    public function getStatusCode(): int
+    {
+        return $this->statusCode;
+    }
+
+    /**
+     * @inheritdoc
+     * @author Verdient。
+     */
+    public function getStatusMessage(): string
+    {
+        return $this->statusMessage;
+    }
+
+    /**
+     * @inheritdoc
+     * @author Verdient。
+     */
+    public function getHeaders(): array
+    {
+        if ($this->headers === null) {
             $this->headers = [];
-            $headers = explode("\r\n", $this->rawHeaders);
-            foreach ($headers as $header) {
-                if (!$header) {
-                    continue;
-                }
-                $header = explode(': ', $header);
-                if (!isset($header[1])) {
-                    continue;
-                }
-                if (isset($this->headers[$header[0]])) {
-                    if (!is_array($this->headers[$header[0]])) {
-                        $this->headers[$header[0]] = [$this->headers[$header[0]]];
+
+            if (!empty($this->rawHeaders)) {
+                $headers = explode("\r\n", $this->rawHeaders);
+
+                foreach ($headers as $header) {
+
+                    if (empty($header)) {
+                        continue;
                     }
-                    $this->headers[$header[0]][] = $header[1];
-                } else {
-                    $this->headers[$header[0]] = $header[1];
+
+                    $header = explode(': ', $header);
+
+                    if (count($header) < 2) {
+                        continue;
+                    }
+
+                    $name = array_shift($header);
+
+                    $value = implode(': ', $header);
+
+                    if (isset($this->headers[$name])) {
+
+                        if (!is_array($this->headers[$name])) {
+                            $this->headers[$name] = [$this->headers[$name]];
+                        }
+
+                        $this->headers[$name][] = $value;
+                    } else {
+                        $this->headers[$name] = $value;
+                    }
                 }
             }
         }
+
         return $this->headers;
     }
 
     /**
-     * 获取Cookies
-     * @return array
+     * 获取解析器
+     *
+     * @param string $contentType 消息体类型
+     * @param string $charset 字符集
+     * @return ParserInterface[]
      * @author Verdient。
      */
-    public function getCookies()
+    protected function getParsers(?string $contentType, ?string $charset = null): Iterator
     {
-        $result = [];
-        $headers = $this->getHeaders();
-        if (isset($headers['Set-Cookie'])) {
-            if ($cookies = $headers['Set-Cookie']) {
-                if (!is_array($cookies)) {
-                    $cookies = [$cookies];
+        if ($this->request->getParser()) {
+            yield $this->request->getParser();
+        } else {
+            $parsers = [];
+
+            if (!empty($contentType)) {
+                if (isset(static::BUILT_IN_PARSERS[$contentType])) {
+                    $parsers[] = static::BUILT_IN_PARSERS[$contentType];
+
+                    foreach (static::BUILT_IN_PARSERS as $key => $parser) {
+                        if ($key !== $contentType) {
+                            $parsers[] = $parser;
+                        }
+                    }
+                } else {
+                    $parsers = static::BUILT_IN_PARSERS;
                 }
-                foreach ($cookies as $cookie) {
-                    $cookie = $this->parseCookie($cookie);
-                    $result[$cookie['key']] = $cookie;
+            }
+
+            foreach ($parsers as $parser) {
+                $parserInstance = new $parser;
+
+                if (!empty($charset)) {
+                    $parserInstance->setCharset($charset);
+                }
+
+                yield $parserInstance;
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc
+     * @author Verdient。
+     */
+    public function getBodies(): mixed
+    {
+        if ($this->bodies === false) {
+            $this->bodies = $this->rawContent;
+
+            if (!empty($this->rawContent)) {
+                $content = $this->rawContent;
+
+                if (
+                    strlen($content) > 2
+                    && ord($content[0]) === 239
+                    && ord($content[1]) === 187
+                    && ord($content[2]) === 191
+                ) {
+                    $content = substr($content, 3);
+                }
+
+                foreach ($this->getParsers($this->getContentType(), $this->getCharset()) as $parser) {
+                    if (!$parser->can($content)) {
+                        continue;
+                    }
+                    try {
+                        $bodies = $parser->parse($content);
+                        if ($bodies !== false) {
+                            $this->bodies = $bodies;
+                            break;
+                        }
+                    } catch (\Throwable) {
+                    }
                 }
             }
         }
-        return $result;
+        return $this->bodies;
+    }
+
+    /**
+     * @inheritdoc
+     * @author Verdient。
+     */
+    public function getCookies(): array
+    {
+        if ($this->cookies === null) {
+
+            $this->cookies = [];
+
+            $headers = $this->getHeaders();
+
+            if (isset($headers['Set-Cookie'])) {
+                $cookies = $headers['Set-Cookie'];
+
+                if (!empty($cookies)) {
+
+                    if (!is_array($cookies)) {
+                        $cookies = [$cookies];
+                    }
+
+                    foreach ($cookies as $cookie) {
+                        $cookie = $this->parseCookie($cookie);
+                        $this->cookies[$cookie['key']] = $cookie;
+                    }
+                }
+            }
+        }
+
+        return $this->cookies;
     }
 
     /**
      * 解析Cookie
-     * @param string $cookie cookie
-     * @return array
+     *
+     * @param string $cookie Cookie字符串
      * @author Verdient。
      */
-    public function parseCookie($cookie)
+    protected function parseCookie(string $cookie): array
     {
         $cookie = explode('; ', $cookie);
         $keyValue = explode('=', $cookie[0]);
@@ -308,68 +399,47 @@ class Response
     }
 
     /**
-     * 获取消息体类型
-     * @return string
+     * @inheritdoc
      * @author Verdient。
      */
-    public function getContentType()
+    public function getContentType(): ?string
     {
         if ($this->contentType === false) {
+
             $this->contentType = null;
-            $header = $this->getHeaders();
-            if (isset($header['Content-Type'])) {
-                $this->contentType = explode(';', $header['Content-Type'])[0];
+
+            $headers = $this->getHeaders();
+
+            if (isset($headers['Content-Type'])) {
+                if (is_array($headers['Content-Type'])) {
+                    $this->contentType = explode(';', $headers['Content-Type'][0])[0];
+                } else {
+                    $this->contentType = explode(';', $headers['Content-Type'])[0];
+                }
+
+                if (empty($this->contentType)) {
+                    $this->contentType = null;
+                }
             }
         }
+
         return $this->contentType;
     }
 
     /**
-     * 获取字符集
-     * @return string
+     * @inheritdoc
      * @author Verdient。
      */
-    public function getCharset()
+    public function getCharset(): ?string
     {
         if ($this->charset === false) {
             $this->charset = null;
-            $header = $this->getHeaders();
-            if (isset($header['Content-Type'])) {
-                if (preg_match('/charset=(.*)/i', $header['Content-Type'], $matches)) {
-                    $this->charset = $matches[1];
+            if ($contentType = $this->getContentType()) {
+                if (preg_match('/charset=(.*)/i', $contentType, $matches)) {
+                    $this->charset = $matches[1] ?? null;
                 }
             }
         }
         return $this->charset;
-    }
-
-    /**
-     * 获取状态码
-     * @return int
-     * @author Verdient。
-     */
-    public function getStatusCode()
-    {
-        return $this->statusCode;
-    }
-
-    /**
-     * 获取状态消息
-     * @return int
-     * @author Verdient。
-     */
-    public function getStatusMessage()
-    {
-        return $this->statusMessage;
-    }
-
-    /**
-     * 获取HTTP版本
-     * @return int
-     * @author Verdient。
-     */
-    public function getHttpVersion()
-    {
-        return $this->httpVersion;
     }
 }
