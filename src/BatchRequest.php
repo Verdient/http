@@ -1,93 +1,139 @@
 <?php
 
-namespace Verdient\http;
+namespace Verdient\Http;
 
-use Verdient\http\exception\InvalidConfigException;
-use Verdient\http\transport\CoroutineTransport;
-use Verdient\http\transport\CUrlTransport;
-use Verdient\http\transport\TransportInterface;
+use Verdient\Http\Transport\CoroutineTransport;
+use Verdient\Http\Transport\CUrlTransport;
+use Verdient\Http\Transport\TransportInterface;
 
 /**
  * 批量请求
+ *
  * @author Verdient。
  */
 class BatchRequest
 {
     /**
-     * @var array 请求集合
+     * 传输通道
+     *
      * @author Verdient。
      */
-    protected $requests = [];
+    protected ?TransportInterface $transport = null;
 
     /**
-     * @param array $requests 请求集合
-     * @param int $batchSize 分批大小
+     * @param array<int|string,Request> $requests 请求集合
+     * @param int $batchSize 批处理大小
      * @author Verdient。
      */
-    public function __construct(array $requests, $batchSize = 100)
+    public function __construct(
+        protected array $requests,
+        protected int $batchSize = 100
+    ) {}
+
+    /**
+     * 设置批处理大小
+     *
+     * @param int $value 批处理大小
+     * @author Verdient。
+     */
+    public function setBatchSize(int $value): static
     {
-        $this->requests = array_chunk($requests, $batchSize, true);
+        $this->batchSize = $value;
+
+        return $this;
     }
 
     /**
-     * @var string 传输通道
+     * 获取批处理大小
+     *
      * @author Verdient。
      */
-    protected $transport = 'auto';
+    public function getBatchSize(): int
+    {
+        return $this->batchSize;
+    }
 
     /**
      * 设置传输通道
-     * @param $name 通道名称
-     * @return TransportInterface
+     *
+     * @param TransportInterface $transport 传输通道
+     *
      * @author Verdient。
      */
-    public function setTransport(string $transport)
+    public function setTransport(TransportInterface $transport): static
     {
-        if ($transport !== 'auto') {
-            if (!class_exists($transport)) {
-                throw new InvalidConfigException('Unknown transport: ' . $transport);
-            }
-            if (!array_key_exists(TransportInterface::class, class_implements($transport))) {
-                throw new InvalidConfigException('Transport must implements ' . TransportInterface::class);
-            }
-        }
         $this->transport = $transport;
+
+        return $this;
     }
 
     /**
      * 获取传输通道
-     * @param $name 通道名称
-     * @return TransportInterface
+     *
      * @author Verdient。
      */
-    protected function getTransport(): TransportInterface
+    protected function getTransport(): ?TransportInterface
     {
-        if ($this->transport === 'auto') {
-            if (extension_loaded('swoole')) {
-                return new CoroutineTransport;
-            } else {
-                return new CUrlTransport;
-            }
+        return $this->transport;
+    }
+
+    /**
+     * 创新默认传输实例
+     *
+     * @author Verdient。
+     */
+    protected function newDefaultTransport()
+    {
+        if (
+            extension_loaded('swoole')
+            && PHP_SAPI === 'cli'
+        ) {
+            return new CoroutineTransport;
         }
-        $class = $this->transport;
-        return new $class;
+
+        return new CUrlTransport;
     }
 
     /**
      * 发送请求
-     * @return array
+     *
+     * @return array<int|string,Result>
+     * @author Verdient。
      */
-    public function send()
+    public function send(): array
     {
-        $responses = [];
-        foreach ($this->requests as $requests) {
-            foreach ($this->getTransport()->batchSend($requests) as $key => $result) {
-                list($statusCode, $headers, $content, $response) = $result;
-                $request = $requests[$key];
-                $class = $request::responseClass();
-                $responses[$key] = new $class($request, $statusCode, $headers, $content, $response);
+        $transport = $this->getTransport() ?: $this->newDefaultTransport();
+
+        $result = [];
+
+        foreach (array_chunk($this->requests, $this->batchSize, true) as $requests) {
+            foreach ($this->batchSend($requests, $transport) as $key => $response) {
+                $result[$key] = $response;
             }
         }
-        return $responses;
+
+        return $result;
+    }
+
+    /**
+     * 批量发送请求
+     *
+     * @param array<int|string,Request> $requests 请求集合
+     * @param TransportInterface $transport 传输通道
+     * @return array<int|string,Result>
+     * @author Verdient。
+     */
+    protected function batchSend(array $requests, TransportInterface $transport): array
+    {
+        $batchOptions = array_map(fn($request) => $request->newOptions(), $requests);
+
+        $batchResult = [];
+
+        foreach ($transport->batchSend($batchOptions) as $key => $result) {
+            $request = $requests[$key];
+            $batchResult[$key] = $request->newResult($result);
+        }
+
+        return $batchResult;
     }
 }
