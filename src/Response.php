@@ -25,8 +25,9 @@ class Response implements ResponseInterface
      */
     const BUILT_IN_PARSERS = [
         'application/json' => JsonParser::class,
-        'application/x-www-form-urlencoded' => UrlencodedParser::class,
         'application/xml' => XmlParser::class,
+        'text/xml' => XmlParser::class,
+        'application/x-www-form-urlencoded' => UrlencodedParser::class,
     ];
 
     /**
@@ -293,7 +294,7 @@ class Response implements ResponseInterface
                 $parsers = static::BUILT_IN_PARSERS;
             }
 
-            foreach ($parsers as $parser) {
+            foreach (array_unique($parsers) as $parser) {
                 $parserInstance = new $parser;
 
                 if (!empty($charset)) {
@@ -327,7 +328,9 @@ class Response implements ResponseInterface
                 }
 
                 foreach ($this->getParsers($this->getContentType(), $this->getCharset()) as $parser) {
+
                     if (!$parser->can($content)) {
+
                         continue;
                     }
                     try {
