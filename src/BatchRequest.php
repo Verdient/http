@@ -23,6 +23,7 @@ class BatchRequest
     /**
      * @param array<int|string,Request> $requests 请求集合
      * @param int $batchSize 批处理大小
+     *
      * @author Verdient。
      */
     public function __construct(
@@ -34,6 +35,7 @@ class BatchRequest
      * 设置批处理大小
      *
      * @param int $value 批处理大小
+     *
      * @author Verdient。
      */
     public function setBatchSize(int $value): static
@@ -120,6 +122,7 @@ class BatchRequest
      *
      * @param array<int|string,Request> $requests 请求集合
      * @param TransportInterface $transport 传输通道
+     *
      * @return array<int|string,Result>
      * @author Verdient。
      */

@@ -17,6 +17,7 @@ interface TransportInterface
      * 发送
      *
      * @param Options $options 请求选项
+     *
      * @author Verdient。
      */
     public function send(Options $options): Result;
@@ -25,6 +26,7 @@ interface TransportInterface
      * 批量发送
      *
      * @param Options[] $batchOptions 包含请求选项的数组
+     *
      * @return Result[]
      * @author Verdient。
      */

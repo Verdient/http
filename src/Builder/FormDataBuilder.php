@@ -2,20 +2,21 @@
 
 namespace Verdient\Http\Builder;
 
+use Override;
 use Verdient\Http\Serializer\Body\FormDataSerializer;
 use Verdient\Http\Serializer\SerializerInterface;
 
 /**
- * 表单构建器
+ * 表单构造器
  *
  * @author Verdient。
  */
 class FormDataBuilder implements BuilderInterface
 {
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function serializer(): SerializerInterface
     {
         return new FormDataSerializer;
@@ -29,17 +30,15 @@ class FormDataBuilder implements BuilderInterface
     protected ?string $boundary = null;
 
     /**
-     * 文本参数
+     * @var string[] 文本参数
      *
-     * @var string[]
      * @author Verdient。
      */
     protected array $texts = [];
 
     /**
-     * 文件参数
+     * @var string[] 文件参数
      *
-     * @var string[]
      * @author Verdient。
      */
     protected array $files = [];
@@ -71,6 +70,7 @@ class FormDataBuilder implements BuilderInterface
      *
      * @param string $name 名称
      * @param string $value 内容
+     *
      * @author Verdient。
      */
     public function addText(string $name, string $value): static
@@ -83,6 +83,7 @@ class FormDataBuilder implements BuilderInterface
      * 移除文本
      *
      * @param string $name 名称
+     *
      * @author Verdient。
      */
     public function removeText(string $name): static
@@ -95,7 +96,8 @@ class FormDataBuilder implements BuilderInterface
      * 添加文件
      *
      * @param string $name 名称
-     * @param string $value 内容
+     * @param string $path 文件路径
+     *
      * @author Verdient。
      */
     public function addFile(string $name, string $path): static
@@ -108,6 +110,7 @@ class FormDataBuilder implements BuilderInterface
      * 移除文件
      *
      * @param string $name 名称
+     *
      * @author Verdient。
      */
     public function removeFile(string $name): static

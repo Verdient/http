@@ -15,6 +15,7 @@ interface BodySerializerInterface extends SerializerInterface
      * 附加的头部
      *
      * @param mixed $data 待序列化的数据
+     *
      * @author Verdient。
      */
     public function headers(mixed $data): array;

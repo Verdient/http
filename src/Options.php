@@ -19,6 +19,7 @@ readonly class Options
      * @param ?int $timeout 超时时间
      * @param ?string $proxyHost 代理主机
      * @param ?int $proxyPort 代理端口
+     *
      * @author Verdient。
      */
     public function __construct(

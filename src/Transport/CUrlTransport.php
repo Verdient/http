@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Verdient\Http\Transport;
 
+use Override;
 use Verdient\Http\Exception\HttpException;
 use Verdient\Http\Options;
 
@@ -15,7 +16,8 @@ use Verdient\Http\Options;
 class CUrlTransport extends AbstractTransport
 {
     /**
-     * @var array 默认参数
+     * 默认参数
+     *
      * @author Verdient。
      */
     const DEFAULT_OPTIONS = [
@@ -27,9 +29,10 @@ class CUrlTransport extends AbstractTransport
     ];
 
     /**
-     * 解决选项
+     * 处理选项
      *
      * @param Options $options 请求对象
+     *
      * @author Verdient。
      */
     protected function resolveOptions(Options $options): array
@@ -86,9 +89,9 @@ class CUrlTransport extends AbstractTransport
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function send(Options $options): Result
     {
         $options = $this->resolveOptions($options);
@@ -140,9 +143,9 @@ class CUrlTransport extends AbstractTransport
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function batchSend(array $batchOptions): array
     {
         $resources = [];

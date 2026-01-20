@@ -23,6 +23,7 @@ readonly class Result
      * @param ?string $response 完整的响应信息
      * @param ?int $errorCode 错误代码（如果有的话）
      * @param ?string $errorMessage 错误信息（如果有的话）
+     *
      * @author Verdient
      */
     public function __construct(

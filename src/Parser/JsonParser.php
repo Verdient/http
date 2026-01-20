@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Verdient\Http\Parser;
 
+use Override;
+
 /**
  * JSON 解析器
  *
@@ -26,9 +28,9 @@ class JsonParser extends AbstractParser
     public int $options = 0;
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function can(string $content): bool
     {
         $content = trim($content);
@@ -38,9 +40,9 @@ class JsonParser extends AbstractParser
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function parse(string $content): mixed
     {
         try {

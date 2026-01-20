@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Verdient\Http\Parser;
 
+use Override;
+
 /**
  * URL编码解析器
  *
@@ -12,9 +14,9 @@ namespace Verdient\Http\Parser;
 class UrlencodedParser extends AbstractParser
 {
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function can(string $content): bool
     {
         $a = strpos($content, '=');
@@ -33,9 +35,9 @@ class UrlencodedParser extends AbstractParser
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function parse(string $content): mixed
     {
         $data = [];

@@ -2,6 +2,8 @@
 
 namespace Verdient\Http\Transport;
 
+use Override;
+
 /**
  * 抽象传输通道
  *
@@ -10,9 +12,9 @@ namespace Verdient\Http\Transport;
 abstract class AbstractTransport implements TransportInterface
 {
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function batchSend(array $batchOptions): array
     {
         $result = [];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Verdient\Http\Transport;
 
+use Override;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 use Verdient\Http\Options;
@@ -13,14 +14,16 @@ use function Swoole\Coroutine\batch as batchCoroutine;
 
 /**
  * 协程传输
+ *
  * @author Verdient。
  */
 class CoroutineTransport extends AbstractTransport
 {
     /**
-     * 解决选项
+     * 处理选项
      *
      * @param Options $options 请求选项
+     *
      * @author Verdient。
      */
     protected function resolveOptions(Options $options): array
@@ -72,6 +75,7 @@ class CoroutineTransport extends AbstractTransport
      * 获取状态信息
      *
      * @param int $code 状态码
+     *
      * @author Verdient。
      */
     protected function getStatusMessage(int $code): string
@@ -123,9 +127,9 @@ class CoroutineTransport extends AbstractTransport
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function send(Options $options): Result
     {
         $result = null;
@@ -141,9 +145,9 @@ class CoroutineTransport extends AbstractTransport
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function batchSend(array $batchOptions): array
     {
         $responses = [];

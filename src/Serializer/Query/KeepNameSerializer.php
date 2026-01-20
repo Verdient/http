@@ -2,6 +2,7 @@
 
 namespace Verdient\Http\Serializer\Query;
 
+use Override;
 use Verdient\Http\Serializer\SerializerInterface;
 
 /**
@@ -12,9 +13,9 @@ use Verdient\Http\Serializer\SerializerInterface;
 class KeepNameSerializer implements SerializerInterface
 {
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function serialize(mixed $data): string
     {
         return $this->normalize($data);
@@ -25,11 +26,12 @@ class KeepNameSerializer implements SerializerInterface
      *
      * @param array $data 待格式化的数据
      * @param string[] $prefixs 前缀集合
+     *
      * @author Verdient。
      */
     protected function normalize(array $data, $prefixs = []): string
     {
-        $isIndexed = $this->isIndexed($data);
+        $isIndexed = array_is_list($data);
         $results = [];
         foreach ($data as $name => $value) {
             $name2 = $isIndexed ? '' : $name;
@@ -49,16 +51,5 @@ class KeepNameSerializer implements SerializerInterface
             }
         }
         return implode('&', $results);
-    }
-
-    /**
-     * 判断数组是否是索引数组
-     *
-     * @param array $array 数组
-     * @author Verdient。
-     */
-    protected function isIndexed(array $array): bool
-    {
-        return array_is_list($array);
     }
 }

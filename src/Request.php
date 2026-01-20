@@ -73,28 +73,28 @@ class Request
      *
      * @author Verdient。
      */
-    protected array $headers = [];
+    protected ?array $headers = null;
 
     /**
      * 查询参数
      *
      * @author Verdient。
      */
-    protected array $queries = [];
+    protected ?array $queries = null;
 
     /**
      * 消息体参数
      *
      * @author Verdient。
      */
-    protected array $bodies = [];
+    protected array|BuilderInterface|null $bodies = null;
 
     /**
      * 消息体
      *
      * @author Verdient。
      */
-    protected string|null|BuilderInterface $content = null;
+    protected string|BuilderInterface|null $content = null;
 
     /**
      * 代理地址
@@ -128,6 +128,7 @@ class Request
      * 设置访问地址
      *
      * @param string $url URL地址
+     *
      * @author Verdient。
      */
     public function setUrl(string $url): static
@@ -174,6 +175,7 @@ class Request
      * 设置发送的头部参数
      *
      * @param array $headers 头部参数
+     *
      * @author Verdient。
      */
     public function setHeaders(array $headers): static
@@ -188,21 +190,27 @@ class Request
      *
      * @author Verdient。
      */
-    public function getHeaders(): array
+    public function getHeaders(): ?array
     {
         return $this->headers;
     }
 
     /**
      * 添加头部
+     *
      * @param string $name 名称
      * @param string|string[] $value 值
-     * @return static
+     *
      * @author Verdient。
      */
-    public function addHeader(string $key, string|array $value)
+    public function addHeader(string $key, string|array $value): static
     {
+        if (!is_array($this->headers)) {
+            $this->headers = [];
+        }
+
         $this->headers[$key] = $value;
+
         return $this;
     }
 
@@ -210,11 +218,13 @@ class Request
      * 设置查询信息
      *
      * @param array $queries 查询信息
+     *
      * @author Verdient。
      */
     public function setQueries(array $queries): static
     {
         $this->queries = $queries;
+
         return $this;
     }
 
@@ -223,7 +233,7 @@ class Request
      *
      * @author Verdient。
      */
-    public function getQueries(): array
+    public function getQueries(): ?array
     {
         return $this->queries;
     }
@@ -233,21 +243,28 @@ class Request
      *
      * @param string $name 名称
      * @param string|string[] $value 内容
+     *
      * @author Verdient。
      */
     public function addQuery(string $name, string|array $value): static
     {
+        if (!is_array($this->queries)) {
+            $this->queries = [];
+        }
+
         $this->queries[$name] = $value;
+
         return $this;
     }
 
     /**
      * 设置消息体参数
      *
-     * @param array $bodies 消息体
+     * @param array|BuilderInterface $bodies 消息体
+     *
      * @author Verdient。
      */
-    public function setBodies(array $bodies): static
+    public function setBodies(array|BuilderInterface $bodies): static
     {
         $this->content = null;
 
@@ -261,7 +278,7 @@ class Request
      *
      * @author Verdient。
      */
-    public function getBodies(): array
+    public function getBodies(): array|BuilderInterface|null
     {
         return $this->bodies;
     }
@@ -271,12 +288,19 @@ class Request
      *
      * @param string $name 名称
      * @param mixed $value 内容
+     *
      * @author Verdient。
      */
     public function addBody(string $name, mixed $value): static
     {
         $this->content = null;
+
+        if (!is_array($this->bodies)) {
+            $this->bodies = [];
+        }
+
         $this->bodies[$name] = $value;
+
         return $this;
     }
 
@@ -284,12 +308,15 @@ class Request
      * 设置消息体
      *
      * @param string|BuilderInterface $content 发送的数据
+     *
      * @author Verdient。
      */
     public function setContent(string|BuilderInterface $content): static
     {
-        $this->bodies = [];
+        $this->bodies = null;
+
         $this->content = $content;
+
         return $this;
     }
 
@@ -298,19 +325,20 @@ class Request
      *
      * @author Verdient。
      */
-    public function getContent(): string|null|BuilderInterface
+    public function getContent(): string|BuilderInterface|null
     {
         return $this->content;
     }
 
     /**
      * 设置代理
+     *
      * @param string $host 地址
      * @param int $port 端口
-     * @return static
+     *
      * @author Verdient。
      */
-    public function setProxy($host, $port = null)
+    public function setProxy($host, $port = null): static
     {
         $this->proxyHost = $host;
         $this->proxyPort = $port;
@@ -340,10 +368,11 @@ class Request
     /**
      * 设置超时时间
      *
-     * @param int $timeout 超时时间
+     * @param ?int $timeout 超时时间
+     *
      * @author Verdient。
      */
-    public function setTimeout(int $timeout): static
+    public function setTimeout(?int $timeout): static
     {
         $this->timeout = $timeout;
         return $this;
@@ -354,7 +383,7 @@ class Request
      *
      * @author Verdient。
      */
-    public function getTimeout(): int
+    public function getTimeout(): ?int
     {
         return $this->timeout;
     }
@@ -363,6 +392,7 @@ class Request
      * 设置传输通道
      *
      * @param TransportInterface $transport 传输通道
+     *
      * @author Verdient。
      */
     public function setTransport(TransportInterface $transport): static
@@ -385,6 +415,7 @@ class Request
      * 设置消息体序列化器
      *
      * @param BodySerializerInterface $serializer 序列化器
+     *
      * @author Verdient。
      */
     public function setBodySerializer(BodySerializerInterface $serializer): static
@@ -407,6 +438,7 @@ class Request
      * 设置查询参数序列化器
      *
      * @param SerializerInterface $serializer 序列化器
+     *
      * @author Verdient。
      */
     public function setQuerySerializer(SerializerInterface $serializer): static
@@ -429,6 +461,7 @@ class Request
      * 设置解析器
      *
      * @param ParserInterface $parser 解析器
+     *
      * @author Verdient。
      */
     public function setParser(ParserInterface $parser): static
@@ -505,7 +538,7 @@ class Request
     }
 
     /**
-     * 解决URL
+     * 处理URL
      *
      * @author Verdient。
      */
@@ -588,20 +621,26 @@ class Request
 
         $headers = $this->getHeaders();
 
-        if (empty($this->bodies)) {
-            $content = $this->getContent() ?: null;
-            if ($content instanceof BuilderInterface) {
-                $builder = $content;
-                $serializer = $builder->serializer();
-                if ($serializer instanceof BodySerializerInterface) {
-                    $headers = array_merge($serializer->headers($builder), $headers);
-                }
-                $content = $serializer->serialize($builder);
-            }
+        $bodies = $this->getBodies();
+
+        if (empty($bodies)) {
+            $content = $this->getContent();
         } else {
-            $bodySerializer = $this->getBodySerializer() ?: $this->newDefaultBodySerializer();
-            $content = $bodySerializer->serialize($this->bodies);
-            $headers = array_merge($bodySerializer->headers($this->bodies), $headers);
+            $content = $bodies;
+        }
+
+        if (!is_string($content)) {
+            if ($content instanceof BuilderInterface) {
+                $serializer = $this->bodies->serializer();
+                if ($serializer instanceof BodySerializerInterface) {
+                    $headers = array_merge($serializer->headers($this->bodies), $headers);
+                }
+                $content = $serializer->serialize($this->bodies);
+            } else {
+                $bodySerializer = $this->getBodySerializer() ?: $this->newDefaultBodySerializer();
+                $content = $bodySerializer->serialize($this->bodies);
+                $headers = array_merge($bodySerializer->headers($this->bodies), $headers);
+            }
         }
 
         $headers['Content-Length'] = $content ? strlen($content) : 0;

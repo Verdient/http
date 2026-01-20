@@ -12,6 +12,7 @@ trait Configurable
 {
     /**
      * @param array $options 选项
+     *
      * @author Verdient。
      */
     public function __construct(array $options = [])
@@ -23,6 +24,7 @@ trait Configurable
      * 配置
      *
      * @param array $options 选项
+     *
      * @author Verdient。
      */
     public function configure(array $options)

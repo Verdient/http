@@ -2,6 +2,8 @@
 
 namespace Verdient\Http\Serializer\Body;
 
+use Override;
+
 /**
  * Urlencoded消息体序列化器
  *
@@ -10,9 +12,9 @@ namespace Verdient\Http\Serializer\Body;
 class UrlencodedBodySerializer implements BodySerializerInterface
 {
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function serialize(mixed $data): string
     {
         if (empty($data)) {
@@ -23,9 +25,9 @@ class UrlencodedBodySerializer implements BodySerializerInterface
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function headers(mixed $data): array
     {
         return [

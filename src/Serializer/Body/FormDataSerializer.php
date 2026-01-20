@@ -3,6 +3,7 @@
 namespace Verdient\Http\Serializer\Body;
 
 use Exception;
+use Override;
 use Verdient\Http\Builder\FormDataBuilder;
 
 /**
@@ -13,10 +14,11 @@ use Verdient\Http\Builder\FormDataBuilder;
 class FormDataSerializer implements BodySerializerInterface
 {
     /**
-     * @inheritdoc
      * @param FormDataBuilder $data 待序列化的数据
+     *
      * @author Verdient。
      */
+    #[Override]
     public function serialize(mixed $data): string
     {
         if (empty($data->getTexts()) && empty($data->getFiles())) {
@@ -68,6 +70,7 @@ class FormDataSerializer implements BodySerializerInterface
      * @param mixed 当前节点
      * @param string $prefix 前缀
      * @param array $result 结果
+     *
      * @author Verdient。
      */
     protected function convertArrayKey(&$node, $prefix, &$result)
@@ -82,10 +85,11 @@ class FormDataSerializer implements BodySerializerInterface
     }
 
     /**
-     * @inheritdoc
      * @param FormDataBuilder $data 待序列化的数据
+     *
      * @author Verdient。
      */
+    #[Override]
     public function headers(mixed $data): array
     {
         if (!($data instanceof FormDataBuilder)) {

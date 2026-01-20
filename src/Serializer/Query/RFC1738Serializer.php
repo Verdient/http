@@ -2,6 +2,7 @@
 
 namespace Verdient\Http\Serializer\Query;
 
+use Override;
 use Verdient\Http\Serializer\SerializerInterface;
 
 /**
@@ -12,9 +13,9 @@ use Verdient\Http\Serializer\SerializerInterface;
 class RFC1738Serializer implements SerializerInterface
 {
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function serialize(mixed $data): string
     {
         return http_build_query($data, '', '&', PHP_QUERY_RFC1738);

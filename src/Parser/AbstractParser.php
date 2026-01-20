@@ -2,6 +2,8 @@
 
 namespace Verdient\Http\Parser;
 
+use Override;
+
 /**
  * 抽象解析器
  *
@@ -17,9 +19,9 @@ abstract class AbstractParser implements ParserInterface
     protected ?string $charset = null;
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function setCharset(string $value): static
     {
         $this->charset = $value;

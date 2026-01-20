@@ -2,6 +2,8 @@
 
 namespace Verdient\Http\Parser;
 
+use Override;
+
 /**
  * Xml解析器
  *
@@ -17,9 +19,9 @@ class XmlParser extends AbstractParser
     public int $options = LIBXML_NOCDATA;
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function can(string $content): bool
     {
         $response = trim($content);
@@ -29,9 +31,9 @@ class XmlParser extends AbstractParser
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function parse(string $content): mixed
     {
         $dom = new \DOMDocument('1.0', $this->charset ?: '');
@@ -53,6 +55,7 @@ class XmlParser extends AbstractParser
      * 将XML转换为数组
      *
      * @param string|SimpleXMLElement $xml 要转换的XML
+     *
      * @author Verdient。
      */
     protected function convertXmlToArray($xml): array

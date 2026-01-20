@@ -20,6 +20,7 @@ interface ParserInterface
      * 是否可以解析
      *
      * @param string $content 响应内容
+     *
      * @author Verdient。
      */
     public function can(string $content): bool;
@@ -28,6 +29,7 @@ interface ParserInterface
      * 解析
      *
      * @param string $content 响应内容
+     *
      * @author Verdient。
      */
     public function parse(string $content): mixed;

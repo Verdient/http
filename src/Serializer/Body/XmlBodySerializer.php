@@ -5,6 +5,7 @@ namespace Verdient\Http\Serializer\Body;
 use DOMDocument;
 use DOMElement;
 use DomText;
+use Override;
 
 /**
  * XML序列化器
@@ -35,9 +36,9 @@ class XmlBodySerializer implements BodySerializerInterface
     const ITEM_TAG = 'item';
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function serialize(mixed $data): string
     {
         if (empty($data)) {
@@ -54,10 +55,11 @@ class XmlBodySerializer implements BodySerializerInterface
     }
 
     /**
-     * 构建XML
+     * 构造XML
      *
      * @param DOMElement $element 元素
      * @param mixed $data 数据
+     *
      * @author Verdient。
      */
     protected function buildXml(DOMElement $element, mixed $data)
@@ -93,6 +95,7 @@ class XmlBodySerializer implements BodySerializerInterface
      * 获取类的名称
      *
      * @param string $class 类名
+     *
      * @author Verdient。
      */
     public function basename($class): string
@@ -105,9 +108,9 @@ class XmlBodySerializer implements BodySerializerInterface
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function headers(mixed $data): array
     {
         return [

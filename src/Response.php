@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Verdient\Http;
 
 use Iterator;
+use Override;
 use Verdient\Http\Parser\JsonParser;
 use Verdient\Http\Parser\ParserInterface;
 use Verdient\Http\Parser\UrlencodedParser;
@@ -122,7 +123,6 @@ class Response implements ResponseInterface
     protected string|null|false $charset = false;
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
     public function __construct(Request $request, Result $result)
@@ -146,81 +146,81 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getRequest(): Request
     {
         return $this->request;
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getRawResponse(): string
     {
         return $this->rawReponse;
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getRawStatus(): string
     {
         return $this->rawStatus;
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getRawHeaders(): string
     {
         return $this->rawHeaders;
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getRawContent(): ?string
     {
         return $this->rawContent;
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getHttpVersion(): string
     {
         return $this->httpVersion;
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getStatusCode(): int
     {
         return $this->statusCode;
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getStatusMessage(): string
     {
         return $this->statusMessage;
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getHeaders(): array
     {
         if ($this->headers === null) {
@@ -273,6 +273,7 @@ class Response implements ResponseInterface
      *
      * @param ?string $contentType 消息体类型
      * @param ?string $charset 字符集
+     *
      * @return ParserInterface[]
      * @author Verdient。
      */
@@ -307,9 +308,9 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getBodies(): mixed
     {
         if ($this->bodies === false) {
@@ -348,9 +349,9 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getCookies(): array
     {
         if ($this->cookies === null) {
@@ -383,6 +384,7 @@ class Response implements ResponseInterface
      * 解析Cookie
      *
      * @param string $cookie Cookie字符串
+     *
      * @author Verdient。
      */
     protected function parseCookie(string $cookie): array
@@ -405,9 +407,9 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getContentType(): ?string
     {
         if ($this->contentType === false) {
@@ -433,9 +435,9 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function getCharset(): ?string
     {
         if ($this->charset === false) {

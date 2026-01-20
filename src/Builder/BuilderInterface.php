@@ -5,7 +5,8 @@ namespace Verdient\Http\Builder;
 use Verdient\Http\Serializer\SerializerInterface;
 
 /**
- * 构建器接口
+ * 构造器接口
+ *
  * @author Verdient。
  */
 interface BuilderInterface

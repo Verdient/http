@@ -2,6 +2,8 @@
 
 namespace Verdient\Http\Serializer\Body;
 
+use Override;
+
 /**
  * JSON消息体序列化器
  *
@@ -10,18 +12,18 @@ namespace Verdient\Http\Serializer\Body;
 class JsonBodySerializer implements BodySerializerInterface
 {
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function serialize(mixed $data): string
     {
         return json_encode($data);
     }
 
     /**
-     * @inheritdoc
      * @author Verdient。
      */
+    #[Override]
     public function headers(mixed $data): array
     {
         return [
