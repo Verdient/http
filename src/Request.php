@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Verdient\Http;
 
+use BackedEnum;
+use Stringable;
 use Verdient\Http\Builder\BuilderInterface;
 use Verdient\Http\Parser\ParserInterface;
 use Verdient\Http\Result;
@@ -242,11 +244,11 @@ class Request
      * 添加查询信息
      *
      * @param string $name 名称
-     * @param string|string[] $value 内容
+     * @param string|string[]|Stringable|int|float|null $value 内容
      *
      * @author Verdient。
      */
-    public function addQuery(string $name, string|array $value): static
+    public function addQuery(string $name, string|array|Stringable|int|float|null $value): static
     {
         if (!is_array($this->queries)) {
             $this->queries = [];
@@ -538,6 +540,30 @@ class Request
     }
 
     /**
+     * 格式化查询参数
+     *
+     * @param array $queries 查询参数
+     *
+     * @author Verdient。
+     */
+    protected function normalizeQueries(array $queries): array
+    {
+        $result = [];
+
+        foreach ($queries as $name => $value) {
+            if (is_array($value)) {
+                $result[$name] = $this->normalizeQueries($value);
+            } else if ($value instanceof BackedEnum) {
+                $result[$name] = (string) $value->value;
+            } else {
+                $result[$name] = (string) $value;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * 处理URL
      *
      * @author Verdient。
@@ -588,7 +614,7 @@ class Request
                 $query .= '&';
             }
 
-            $query .= $querySerializer->serialize($this->queries);
+            $query .= $querySerializer->serialize($this->normalizeQueries($this->getQueries()));
         }
 
         $url = 'scheme://auth@host:port/path?query#fragment';
