@@ -655,17 +655,17 @@ class Request
             $content = $bodies;
         }
 
-        if (!is_string($content)) {
+        if ($content !== null && !is_string($content)) {
             if ($content instanceof BuilderInterface) {
-                $serializer = $this->bodies->serializer();
+                $serializer = $content->serializer();
                 if ($serializer instanceof BodySerializerInterface) {
-                    $headers = array_merge($serializer->headers($this->bodies), $headers);
+                    $headers = array_merge($serializer->headers($content), $headers);
                 }
-                $content = $serializer->serialize($this->bodies);
+                $content = $serializer->serialize($content);
             } else {
                 $bodySerializer = $this->getBodySerializer() ?: $this->newDefaultBodySerializer();
-                $content = $bodySerializer->serialize($this->bodies);
-                $headers = array_merge($bodySerializer->headers($this->bodies), $headers);
+                $headers = array_merge($bodySerializer->headers($content), $headers);
+                $content = $bodySerializer->serialize($content);
             }
         }
 
