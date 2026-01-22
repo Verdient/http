@@ -645,7 +645,7 @@ class Request
     {
         $url = $this->resolveUrl();
 
-        $headers = $this->getHeaders();
+        $headers = $this->getHeaders() ?: [];
 
         $bodies = $this->getBodies();
 
